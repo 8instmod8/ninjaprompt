@@ -1,0 +1,54 @@
+{% extends "admin/base_site.html" %}
+
+{% block content %}
+<div style="max-width: 960px; margin: 40px auto; padding: 40px; background: #fff; border-radius: 16px; box-shadow: 0 10px 40px rgba(0,0,0,0.1);">
+
+    <h1 style="margin: 0 0 10px 0; font-size: 28px;">📦 Массовый импорт промптов</h1>
+    <p style="color: #555; font-size: 16px;">Загрузите Excel-файл и (по желанию) ZIP-архив с фотографиями.</p>
+
+    <div style="background: #f8f9fa; padding: 20px; border-radius: 12px; margin: 25px 0;">
+        <strong>Требуемые колонки в Excel:</strong><br><br>
+        <table style="width:100%; border-collapse: collapse; font-size: 15px;">
+            <thead>
+                <tr style="background:#e9ecef;">
+                    <th style="border:1px solid #dee2e6; padding:10px; text-align:left;">filename <span style="color:red;">*</span></th>
+                    <th style="border:1px solid #dee2e6; padding:10px; text-align:left;">category <span style="color:red;">*</span></th>
+                    <th style="border:1px solid #dee2e6; padding:10px; text-align:left;">group</th>
+                    <th style="border:1px solid #dee2e6; padding:10px; text-align:left;">prompt <span style="color:red;">*</span></th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td style="border:1px solid #dee2e6; padding:10px;">brun1 (1).JPG</td>
+                    <td style="border:1px solid #dee2e6; padding:10px;">Селфи</td>
+                    <td style="border:1px solid #dee2e6; padding:10px;">Брюнетки</td>
+                    <td style="border:1px solid #dee2e6; padding:10px;">Девушка в белом платье на фоне...</td>
+                </tr>
+            </tbody>
+        </table>
+        <small style="color:#666;">• Группа — необязательная колонка<br>
+        • Фото должны называться точно так же, как в колонке <strong>filename</strong></small>
+    </div>
+
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        <div style="margin-bottom: 25px;">
+            {{ form.excel_file.label_tag }}
+            {{ form.excel_file }}
+            <small style="color:#666;">{{ form.excel_file.help_text }}</small>
+        </div>
+
+        <div style="margin-bottom: 30px;">
+            {{ form.photos_zip.label_tag }}
+            {{ form.photos_zip }}
+            <small style="color:#666;">{{ form.photos_zip.help_text }}</small>
+        </div>
+
+        <button type="submit" style="padding: 14px 36px; font-size: 17px; background: #2563eb; color: white; border: none; border-radius: 12px; cursor: pointer;">
+            🚀 Импортировать карточки
+        </button>
+    </form>
+
+</div>
+{% endblock %}

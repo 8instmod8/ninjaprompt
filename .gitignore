@@ -1,0 +1,24 @@
+# Virtual environment
+venv/
+__pycache__/
+*.pyc
+
+# Database
+db.sqlite3
+
+# Media files (фото)
+media/
+
+# Environment variables
+.env
+.env.local
+
+# Logs
+*.log
+
+# Static files (собираем на сервере)
+staticfiles/
+
+# IDE
+.vscode/
+.idea/

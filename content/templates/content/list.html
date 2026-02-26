@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <title>Библиотека промптов</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            margin: 0;
+            background: #f8f9fa;
+            color: #111;
+        }
+        header {
+            background: white;
+            padding: 20px 40px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .logo { font-size: 1.85rem; font-weight: 700; }
+        .search {
+            width: 460px;
+            padding: 14px 20px;
+            border: 1px solid #ddd;
+            border-radius: 12px;
+            font-size: 1.05rem;
+        }
+        .add-btn {
+            background: #2563eb;
+            color: white;
+            border: none;
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            font-size: 1.8rem;
+            cursor: pointer;
+        }
+        .filters {
+            display: flex;
+            gap: 10px;
+            padding: 20px 40px;
+            background: white;
+            border-bottom: 1px solid #eee;
+            overflow-x: auto;
+        }
+        .filter-chip {
+            padding: 8px 22px;
+            border-radius: 9999px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            white-space: nowrap;
+            text-decoration: none;
+            color: #555;
+            border: 1px solid #ddd;
+        }
+        .filter-chip.active {
+            background: #111;
+            color: white;
+            border-color: #111;
+        }
+        .grid {
+            display: grid;
+            gap: 26px;
+            max-width: 1760px;
+            margin: 0 auto;
+            padding: 40px 40px 80px;
+        }
+
+        /* Мобильные и маленькие экраны — 1–2 карточки */
+        @media (max-width: 899px) {
+            .grid {
+                grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            }
+        }
+
+        /* Планшеты и средние экраны — 3 карточки */
+        @media (min-width: 900px) and (max-width: 1249px) {
+            .grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        /* Большие экраны (от 1250 px и выше, включая 1920 px и 4K) — строго 4 карточки */
+        @media (min-width: 1250px) {
+            .grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+        .card {
+            background: white;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.06);
+        }
+        .card img {
+            width: 100%;
+            height: auto;
+            max-height: 410px;        /* было 380 px */
+            object-fit: contain;
+            background: #f8f9fa;
+            padding: 12px;
+        }
+        .category-badge {
+            position: absolute;
+            top: 16px;
+            left: 16px;
+            background: rgba(255,255,255,0.95);
+            color: #555;
+            font-size: 0.82rem;
+            font-weight: 600;
+            padding: 5px 16px;
+            border-radius: 9999px;
+        }
+        .card-body { 
+            padding: 22px 20px 20px; 
+        }
+        .card h3 { 
+            margin: 0 0 14px; 
+            font-size: 1.28rem; 
+            font-weight: 700; 
+        }
+
+        /* Название группы в карточке (как на твоём скриншоте) */
+        .group-name-badge {
+            display: inline-block;
+            background: #f1f1f1;           /* светлый фон как на скрине */
+            color: #2C2C2C;                /* тёмный текст */
+            padding: 7px 18px;
+            border-radius: 9999px;
+            font-size: 0.88rem;
+            font-weight: 600;
+            margin-bottom: 16px;
+            text-decoration: none;
+            transition: all 0.25s ease;
+            border: 1px solid #e0e0e0;
+        }
+
+        .group-name-badge:hover {
+            background: #2C2C2C;           /* чёрный фон при наведении */
+            color: #E5E5E5;                /* светло-серый текст */
+            border-color: #2C2C2C;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .copy-btn {
+            width: 100%;
+            padding: 16px;
+            background: #111;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.05rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .copy-btn:hover { background: #000; }
+
+        /* ====================== ЗАЩИТА ОТ СКРИНШОТОВ ====================== */
+        .card {
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* При попытке скриншота — сильное размытие */
+        .screenshot-detected .card img {
+            filter: blur(12px) brightness(0.4) !important;
+        }
+
+        /* Пагинация */
+        .pagination {
+            text-align: center;
+            margin: 80px 0 60px;
+        }
+        .pagination a {
+            display: inline-block;
+            padding: 0 24px;
+            height: 48px;
+            line-height: 48px;
+            background: #2563eb;
+            color: white;
+            border-radius: 12px;
+            margin: 0 6px;
+            text-decoration: none;
+            font-size: 18px;
+        }
+        .user-panel {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        
+        .username {
+            font-size: 1.05rem;
+            font-weight: 600;
+            color: #333;
+            white-space: nowrap;
+        }
+        
+        .logout-btn {
+            padding: 10px 20px;
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.02rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.2s ease;
+
+            height: 48px;
+        }
+        
+        .logout-btn:hover {
+            background: #c82333;
+            transform: translateY(-1px);
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo">Библиотека промптов</div>
+        <input type="text" class="search" id="searchInput" 
+               placeholder="Поиск по названию группы или категории..." 
+               onkeyup="filterCards()">
+        <!-- Новый блок справа -->
+        <div class="user-panel">
+            {% if user.is_authenticated %}
+                <span class="username">{{ user.username }}</span>
+                
+                <!-- Правильная кнопка «Выход» через форму POST -->
+                <form method="post" action="{% url 'logout' %}" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="logout-btn">Выход</button>
+                </form>
+            {% endif %}
+            
+            {% if is_admin %}
+                <button class="add-btn" onclick="location.href='/admin/content/contentitem/add/'">+</button>
+            {% endif %}
+        </div>
+    </header>
+
+    <!-- Строка чипов категорий -->
+    <div class="filters">
+        <a href="{% url 'content:content_list' %}" class="filter-chip active">Все</a>
+        {% for cat in categories %}
+            <a href="{% url 'content:category_detail' cat.slug %}" 
+               class="filter-chip {% if cat.slug == category.slug %}active{% endif %}">
+                {{ cat.name }}
+            </a>
+        {% endfor %}
+    </div>
+
+    <!-- === ОБЩИЙ СПИСОК ВСЕХ КАРТОЧЕК === -->
+    <div class="grid">
+        {% for item in items %}
+        <div class="card" data-id="{{ item.id }}" data-category="{{ item.category.slug }}">
+            <div style="position:relative;">
+                <img src="{{ item.photo.url }}" alt="{{ item.category.name }}">
+                <div class="category-badge">{{ item.category.name|upper }}</div>
+            </div>
+            <div class="card-body">
+                <a href="{% url 'content:category_detail' item.category.slug %}" 
+                       class="group-name-badge">
+                        {{ item.category.name }}
+                </a>
+                {% if item.group %}
+                    <a href="{% url 'content:group_detail' item.group.slug %}" 
+                       class="group-name-badge">
+                        {{ item.group.name }}
+                    </a>
+                {% endif %}
+
+                <button onclick="copyText({{ item.id }})" class="copy-btn">📋 Скопировать промпт</button>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Пагинация -->
+    {% if paginator.num_pages > 1 %}
+    <div class="pagination">
+        {% if page_obj.has_previous %}
+            <a href="?page={{ page_obj.previous_page_number }}">← Назад</a>
+        {% endif %}
+
+        <span style="margin: 0 20px; font-size: 17px; color: #333;">
+            Страница <strong>{{ page_obj.number }}</strong> из {{ paginator.num_pages }}
+        </span>
+
+        {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}">Вперёд →</a>
+        {% endif %}
+    </div>
+    {% endif %}
+
+<script>
+function filterCards() {
+    const term = document.getElementById('searchInput').value.toLowerCase().trim();
+    document.querySelectorAll('.card').forEach(card => {
+        const text = (card.textContent || '').toLowerCase();
+        card.style.display = (term === '' || text.includes(term)) ? '' : 'none';
+    });
+}
+
+async function copyText(id) {
+    const btn = document.querySelector(`[data-id="${id}"] .copy-btn`);
+    const original = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = 'Копируем...';
+
+    try {
+        const res = await fetch(`/list/api/copy/${id}/`, {
+            method: 'POST',
+            headers: { 'X-CSRFToken': getCookie('csrftoken') },
+            credentials: 'same-origin'
+        });
+        const data = await res.json();
+        if (data.success) {
+            await navigator.clipboard.writeText(data.text);
+            btn.innerHTML = '✓ Скопировано!';
+            setTimeout(() => { btn.innerHTML = original; btn.disabled = false; }, 2500);
+        }
+    } catch(e) {
+        btn.innerHTML = 'Ошибка';
+        setTimeout(() => { btn.innerHTML = original; btn.disabled = false; }, 2000);
+    }
+}
+
+function getCookie(name) {
+    let value = null;
+    if (document.cookie) {
+        const cookies = document.cookie.split(';');
+        for (let c of cookies) {
+            c = c.trim();
+            if (c.startsWith(name + '=')) {
+                value = decodeURIComponent(c.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return value;
+}
+/* ====================== ЗАЩИТА ОТ СКРИНШОТОВ ====================== */
+let screenshotWarning = false;
+
+function triggerScreenshotProtection() {
+    if (screenshotWarning) return;
+    screenshotWarning = true;
+
+    document.body.classList.add('screenshot-detected');
+
+    const overlay = document.createElement('div');
+    overlay.style.cssText = `
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.96); color: white; z-index: 99999;
+        display: flex; align-items: center; justify-content: center;
+        text-align: center; flex-direction: column; font-family: inherit;
+    `;
+    overlay.innerHTML = `
+        <h1 style="font-size: 42px; margin: 0 0 20px 0;">⛔</h1>
+        <p style="font-size: 20px; max-width: 620px;">
+            Любое копирование контента запрещено.
+        </p>
+        <button onclick="this.parentElement.remove(); document.body.classList.remove('screenshot-detected');" 
+                style="margin-top: 30px; padding: 16px 48px; font-size: 18px; background: #e11d48; color: white; border: none; border-radius: 12px; cursor: pointer;">
+            Понятно
+        </button>
+    `;
+    document.body.appendChild(overlay);
+
+    setTimeout(() => {
+        screenshotWarning = false;
+        document.body.classList.remove('screenshot-detected');
+    }, 7000);
+}
+
+// Детектор Print Screen, Win+Shift+S и т.д.
+document.addEventListener('keydown', e => {
+    if (e.key === 'PrintScreen' || 
+        (e.ctrlKey && e.key.toLowerCase() === 's') || 
+        (e.metaKey && e.key.toLowerCase() === 's')) {
+        e.preventDefault();
+        triggerScreenshotProtection();
+    }
+});
+
+// Запрет правой кнопки мыши на карточках
+document.addEventListener('contextmenu', e => {
+    if (e.target.closest('.card')) {
+        e.preventDefault();
+        triggerScreenshotProtection();
+    }
+});
+</script>
+</body>
+</html>
