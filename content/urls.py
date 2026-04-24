@@ -15,4 +15,5 @@ urlpatterns = [
     
     # API для копирования промпта
     path('api/copy/<int:pk>/', views.copy_content, name='copy_content'),
+    path('api/csrf/', views.get_csrf_token, name='get_csrf'),
 ]

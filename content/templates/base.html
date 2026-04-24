@@ -1,0 +1,54 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <link rel="icon" href="{% static 'ninp.png' %}" type="image/png">
+    <link rel="apple-touch-icon" href="{% static 'ninp.png' %}">
+
+    <title>{% block title %}Ninja Prompts{% endblock %}</title>
+
+    <!-- Основные стили -->
+    <link rel="stylesheet" href="{% static 'css/main.css' %}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+    <!-- ====================== HEADER ====================== -->
+    {% block header %}
+    <header>
+        <a href="{% url 'content:content_list' %}" style="text-decoration: none; display: block;">
+            <img src="{% static 'ninja-prompt.png' %}" alt="Ninja Prompt" class="logo">
+        </a>
+
+        {% block search %}
+        <!-- Поиск будет переопределяться в list.html -->
+        {% endblock %}
+
+        <div class="user-panel">
+            {% if is_admin %}
+                <button class="add-btn" onclick="location.href='/admin/content/contentitem/add/'">+</button>
+            {% endif %}
+
+            <!-- Telegram -->
+            <a href="https://t.me/ninjaprompt" 
+               target="_blank" 
+               rel="noopener noreferrer"
+               class="telegram-link"
+               title="Telegram-канал Ninja Prompts"
+               aria-label="Telegram">
+                <img src="{% static 'telega.png' %}" alt="Telegram" class="telegram-icon">
+            </a>
+        </div>
+    </header>
+    {% endblock %}
+
+    {% block filters %}{% endblock %}
+
+    {% block content %}{% endblock %}
+
+    <!-- ====================== JAVASCRIPT ====================== -->
+    <script src="{% static 'js/main.js' %}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

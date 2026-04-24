@@ -5,6 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django_ratelimit.decorators import ratelimit
 from .models import ContentItem, Group, Category
 from django.core.paginator import Paginator
+from .models import ContentItem, CopyLog
 
 from django.contrib.admin.views.decorators import staff_member_required
 from django.shortcuts import redirect
@@ -16,9 +17,13 @@ from django.utils.text import slugify
 from django.utils import timezone
 import zipfile
 from django.conf import settings
+from django.middleware.csrf import get_token
+from django.http import JsonResponse
 
+def get_csrf_token(request):
+    """Отдаёт CSRF-токен для фронтенда (решает проблему инкогнито)"""
+    return JsonResponse({'csrfToken': get_token(request)})
 
-@login_required
 @require_POST
 @ratelimit(key='user', rate='10/m', block=True)
 def copy_content(request, pk):
@@ -28,8 +33,6 @@ def copy_content(request, pk):
     except ContentItem.DoesNotExist:
         return JsonResponse({'success': False, 'error': 'Запись не найдена'}, status=404)
 
-
-@login_required
 def content_list(request):
     # Все карточки вместе (групповые + одиночные) с сортировкой по дате
     all_items = ContentItem.objects.select_related('category', 'group').order_by('-created_at')
@@ -50,7 +53,6 @@ def content_list(request):
     })
 
 
-@login_required
 def category_detail(request, slug):
     category = get_object_or_404(Category, slug=slug)
     items = ContentItem.objects.filter(category=category).select_related('group')
@@ -71,7 +73,6 @@ def category_detail(request, slug):
     })
 
 
-@login_required
 def group_detail(request, slug):
     group = get_object_or_404(Group, slug=slug)
     items = ContentItem.objects.filter(group=group).select_related('category')
@@ -182,3 +183,4 @@ def bulk_import_view(request):
         form = BulkImportForm()
 
     return render(request, 'content/bulk_import.html', {'form': form})
+
