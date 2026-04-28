@@ -102,3 +102,26 @@ class ContentItemAdmin(admin.ModelAdmin):
         urls = super().get_urls()
         custom_urls = [path('bulk-import/', bulk_import_view, name='bulk_import')]
         return custom_urls + urls
+
+@admin.register(Category)
+class CategoryAdmin(admin.ModelAdmin):
+    list_display = ('name', 'slug', 'order')
+    prepopulated_fields = {'slug': ('name',)}
+    ordering = ('order', 'name')
+    search_fields = ('name',)
+
+
+@admin.register(Subcategory)
+class SubcategoryAdmin(admin.ModelAdmin):
+    list_display = ('name', 'slug', 'category')
+    list_filter = ('category',)
+    prepopulated_fields = {'slug': ('name',)}
+    search_fields = ('name',)
+
+
+@admin.register(Group)
+class GroupAdmin(admin.ModelAdmin):
+    list_display = ('name', 'slug')
+    prepopulated_fields = {'slug': ('name',)}
+    filter_horizontal = ('subcategories',)
+    search_fields = ('name',)
