@@ -1,0 +1,320 @@
+/* =============================================
+   MAIN.CSS — Ninja Prompts
+   Версия: 2026
+   ============================================= */
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    margin: 0;
+    background: #f8f9fa;
+    color: #111;
+    line-height: 1.5;
+}
+
+/* ====================== HEADER ====================== */
+header {
+    background: white;
+    padding: 20px 40px;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    gap: 20px;
+}
+
+.logo {
+    height: 58px;
+    width: auto;
+    display: block;
+    transition: transform 0.2s ease;
+}
+
+.logo:hover {
+    transform: scale(1.05);
+}
+
+.search {
+    width: 460px;
+    padding: 14px 20px;
+    border: 1px solid #ddd;
+    border-radius: 12px;
+    font-size: 1.05rem;
+    flex: 1;
+    max-width: 520px;
+}
+
+/* User panel (админ-кнопка + Telegram) */
+.user-panel {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.add-btn {
+    background: #2563eb;
+    color: white;
+    border: none;
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    font-size: 1.8rem;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.add-btn:hover {
+    background: #1d4ed8;
+}
+
+/* ====================== TELEGRAM ICON ====================== */
+.telegram-link {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+}
+
+.telegram-icon {
+    height: 38px;
+    width: 38px;
+    border-radius: 50%;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    object-fit: cover;
+}
+
+.telegram-link:hover .telegram-icon {
+    transform: scale(1.12);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.top-categories {
+    display: flex;
+    gap: 28px;
+    flex: 1;
+}
+
+.top-category {
+    font-weight: 600;
+    color: #333;
+    text-decoration: none;
+    padding: 8px 0;
+    border-bottom: 3px solid transparent;
+    transition: all 0.2s;
+}
+
+.top-category:hover,
+.top-category.active {
+    color: #000;
+    border-bottom: 3px solid #2563eb;
+}
+
+/* Адаптив */
+@media (max-width: 992px) {
+    .header-top {
+        flex-wrap: wrap;
+        gap: 15px;
+    }
+    .top-categories {
+        order: 3;
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+/* ====================== FILTER CHIPS ====================== */
+.filters {
+    display: flex;
+    gap: 10px;
+    padding: 20px 40px;
+    background: white;
+    border-bottom: 1px solid #eee;
+    overflow-x: auto;
+    flex-wrap: wrap;
+}
+
+.filter-chip {
+    padding: 8px 22px;
+    border-radius: 9999px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    white-space: nowrap;
+    text-decoration: none;
+    color: #555;
+    border: 1px solid #ddd;
+    transition: all 0.2s ease;
+}
+
+.filter-chip:hover {
+    background: #f1f1f1;
+}
+
+.filter-chip.active {
+    background: #111;
+    color: white;
+    border-color: #111;
+}
+
+/* ====================== GRID & CARDS ====================== */
+.grid {
+    display: grid;
+    gap: 26px;
+    max-width: 1760px;
+    margin: 0 auto;
+    padding: 40px 40px 80px;
+}
+
+/* Responsive Grid */
+@media (max-width: 899px) {
+    .grid { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+}
+
+@media (min-width: 900px) and (max-width: 1249px) {
+    .grid { grid-template-columns: repeat(3, 1fr); }
+}
+
+@media (min-width: 1250px) {
+    .grid { grid-template-columns: repeat(4, 1fr); }
+}
+
+.card {
+    background: white;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.06);
+    position: relative;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.1);
+}
+
+.card img {
+    width: 100%;
+    height: auto;
+    max-height: 410px;
+    object-fit: contain;
+    background: #f8f9fa;
+    padding: 12px;
+}
+
+.category-badge {
+    position: absolute;
+    top: 16px;
+    left: 16px;
+    background: rgba(255, 255, 255, 0.95);
+    color: #555;
+    font-size: 0.82rem;
+    font-weight: 600;
+    padding: 5px 16px;
+    border-radius: 9999px;
+}
+
+.card-body {
+    padding: 22px 20px 20px;
+}
+
+.group-name-badge {
+    display: inline-block;
+    background: #f1f1f1;
+    color: #2C2C2C;
+    padding: 7px 18px;
+    border-radius: 9999px;
+    font-size: 0.88rem;
+    font-weight: 600;
+    margin-bottom: 16px;
+    text-decoration: none;
+    transition: all 0.25s ease;
+    border: 1px solid #e0e0e0;
+}
+
+.group-name-badge:hover {
+    background: #2C2C2C;
+    color: #E5E5E5;
+    border-color: #2C2C2C;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.copy-btn {
+    width: 100%;
+    padding: 16px;
+    background: #111;
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 1.05rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.copy-btn:hover {
+    background: #000;
+}
+
+/* ====================== SCREENSHOT PROTECTION ====================== */
+.screenshot-detected .card img {
+    filter: blur(12px) brightness(0.4) !important;
+}
+
+/* ====================== PAGINATION ====================== */
+.pagination {
+    text-align: center;
+    margin: 80px 0 60px;
+}
+
+.pagination a {
+    display: inline-block;
+    padding: 0 24px;
+    height: 48px;
+    line-height: 48px;
+    background: #2563eb;
+    color: white;
+    border-radius: 12px;
+    margin: 0 6px;
+    text-decoration: none;
+    font-size: 18px;
+    transition: all 0.2s ease;
+}
+
+.pagination a:hover {
+    background: #1d4ed8;
+    transform: translateY(-1px);
+}
+
+/* ====================== UTILS ====================== */
+h1 {
+    font-size: 2.8rem;
+    margin: 0 0 12px 0;
+}
+
+p {
+    color: #666;
+}
+
+/* ====================== MOBILE IMPROVEMENTS ====================== */
+@media (max-width: 768px) {
+    header {
+        padding: 16px 20px;
+        flex-wrap: wrap;
+    }
+    
+    .search {
+        width: 100%;
+        order: 3;
+        margin-top: 12px;
+    }
+    
+    .telegram-icon {
+        height: 34px;
+        width: 34px;
+    }
+}

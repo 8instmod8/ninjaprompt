@@ -2,17 +2,6 @@
 
 {% block title %}Ninja Prompts - {{ group.name }}{% endblock %}
 
-{% block filters %}
-    <div class="filters">
-        <a href="{% url 'content:content_list' %}" class="filter-chip">Все</a>
-        {% for cat in categories %}
-            <a href="{% url 'content:category_detail' cat.slug %}" class="filter-chip">
-                {{ cat.name }}
-            </a>
-        {% endfor %}
-    </div>
-{% endblock %}
-
 {% block content %}
     <div style="padding: 30px 50px 1px;">
         <h1>{{ group.name }}</h1>
@@ -20,14 +9,29 @@
 
     <div class="grid">
         {% for item in items %}
-        <div class="card" data-id="{{ item.id }}" data-category="{{ item.category.slug }}">
+        <div class="card" data-id="{{ item.id }}" data-category="{{ item.effective_category.slug }}">
             <div style="position:relative;">
-                <img src="{{ item.photo.url }}" alt="{{ item.category.name }}">
-                <div class="category-badge">{{ item.category.name|upper }}</div>
+                <img src="{{ item.photo.url }}" alt="{{ item.effective_category.name }}">
+                <div class="category-badge">{{ item.subcategory.name|upper|default:item.effective_category.name|upper }}</div>
             </div>
             <div class="card-body">
-                <a href="{% url 'content:category_detail' item.category.slug %}" 
-                   class="group-name-badge">{{ item.category.name }}</a>
+                {% if item.group %}
+                    <a href="{% url 'content:group_detail' item.group.slug %}" 
+                       class="group-name-badge">{{ item.group.name }}</a>
+                {% endif %}
+
+                {% if item.subcategory %}
+                    <a href="{% url 'content:subcategory_detail' item.effective_category.slug item.subcategory.slug %}" 
+                       class="group-name-badge">
+                        {{ item.subcategory.name }}
+                    </a>
+                {% else %}
+                    <a href="{% url 'content:category_detail' item.effective_category.slug %}" 
+                       class="group-name-badge">
+                        {{ item.effective_category.name }}
+                    </a>
+                {% endif %}
+
                 <button onclick="copyText({{ item.id }})" class="copy-btn">📋 Скопировать промпт</button>
             </div>
         </div>

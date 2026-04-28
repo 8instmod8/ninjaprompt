@@ -3,8 +3,8 @@
 <html lang="ru">
 <head>
     <meta charset="utf-8">
-    <link rel="icon" href="{% static 'ninp.png' %}" type="image/png">
-    <link rel="apple-touch-icon" href="{% static 'ninp.png' %}">
+    <link rel="icon" href="{% static 'images/ninp.png' %}" type="image/png">
+    <link rel="apple-touch-icon" href="{% static 'images/ninp.png' %}">
 
     <title>{% block title %}Ninja Prompts{% endblock %}</title>
 
@@ -18,9 +18,17 @@
     {% block header %}
     <header>
         <a href="{% url 'content:content_list' %}" style="text-decoration: none; display: block;">
-            <img src="{% static 'ninja-prompt.png' %}" alt="Ninja Prompt" class="logo">
+            <img src="{% static 'images/ninja-prompt.png' %}" alt="Ninja Prompt" class="logo">
         </a>
-
+	<!-- Основные категории (Top Level) -->
+            <div class="top-categories">
+                {% for top in top_categories %}
+                    <a href="{% url 'content:category_detail' top.slug %}" 
+                       class="top-category {% if top.slug == top_category.slug %}active{% endif %}">
+                        {{ top.name }}
+                    </a>
+                {% endfor %}
+            </div>
         {% block search %}
         <!-- Поиск будет переопределяться в list.html -->
         {% endblock %}
@@ -37,7 +45,7 @@
                class="telegram-link"
                title="Telegram-канал Ninja Prompts"
                aria-label="Telegram">
-                <img src="{% static 'telega.png' %}" alt="Telegram" class="telegram-icon">
+                <img src="{% static 'images/telega.png' %}" alt="Telegram" class="telegram-icon">
             </a>
         </div>
     </header>

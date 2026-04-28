@@ -4,16 +4,17 @@ from . import views
 app_name = 'content'
 
 urlpatterns = [
-    # Это будет главная страница библиотеки — адрес /list/
     path('', views.content_list, name='content_list'),
     
-    # Страница категории
-    path('category/<slug:slug>/', views.category_detail, name='category_detail'),
-    
-    # Страница группы
+    # Группы — должны быть выше общих slug!
     path('group/<slug:slug>/', views.group_detail, name='group_detail'),
     
-    # API для копирования промпта
+    # Топ-категория
+    path('<slug:slug>/', views.category_detail, name='category_detail'),
+    
+    # Подкатегория
+    path('<slug:category_slug>/<slug:subcategory_slug>/', 
+         views.subcategory_detail, name='subcategory_detail'),
+    
     path('api/copy/<int:pk>/', views.copy_content, name='copy_content'),
-    path('api/csrf/', views.get_csrf_token, name='get_csrf'),
 ]

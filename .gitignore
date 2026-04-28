@@ -1,24 +1,14 @@
-# Virtual environment
-venv/
 __pycache__/
-*.pyc
-
-# Database
+*.py[cod]
+*.class
+*.so
+.Python
+venv/
+env/
+ENV/
 db.sqlite3
-
-# Media files (фото)
-media/
-
-# Environment variables
-.env
-.env.local
-
-# Logs
-*.log
-
-# Static files (собираем на сервере)
+*.env
 staticfiles/
-
-# IDE
-.vscode/
-.idea/
+media/photos/
+.DS_Store
+*.log

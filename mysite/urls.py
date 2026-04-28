@@ -9,17 +9,11 @@ from django.conf.urls.static import static
 urlpatterns = [
     path('admin/', admin.site.urls),
     
-    # Главная страница сайта — всегда форма входа (login.html)
-    path('', LoginView.as_view(
-        template_name='login.html',
-        redirect_authenticated_user=True,
-    ), name='login'),
+    # Главная страница сайта — теперь сразу библиотека промптов
+    path('', include('content.urls', namespace='content')),
     
-    # Кнопка «Выход»
+    # Кнопка «Выход» (оставляем для админки)
     path('logout/', LogoutView.as_view(next_page='/'), name='logout'),
-    
-    # Все страницы библиотеки промптов
-    path('list/', include('content.urls')),
 ]
 
 # ====================== ОБСЛУЖИВАНИЕ МЕДИА-ФАЙЛОВ ======================
