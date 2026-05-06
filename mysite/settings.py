@@ -1,20 +1,30 @@
 """
-Django settings for mysite project.
+Django settings for ninjaprompt project.
+Production-ready + hardened (2026)
 """
 
 from pathlib import Path
-
 import environ
 import os
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = 'django-insecure-+seit+dk$0*euh%hqn=_7n@wqp5e=0g_8_=j#5bhpa!%ptfvup'
+env = environ.Env(
+    DEBUG=(bool, False),
+    SECRET_KEY=(str, None),
+)
+environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
 
-DEBUG = True
+# === SECURITY (КРИТИЧНО) ===
+SECRET_KEY = env('SECRET_KEY')          # ← только из .env
+DEBUG = env.bool('DEBUG', default=False)
 
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost', 'biblprompt.ru', 'www.biblprompt.ru', 'ninjapromt.ru', 'www.ninjapromt.ru', 'ninjaprompt.ru', 'www.ninjaprompt.ru',  '89.111.154.203' ]
+ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=[
+    '127.0.0.1',
+    'localhost',
+])
 
+# === APPLICATIONS ===
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -43,7 +53,7 @@ ROOT_URLCONF = 'mysite.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'templates'],   # ← добавили эту строку
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -58,9 +68,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'mysite.wsgi.application'
 
-env = environ.Env()
-environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
-
+# === DATABASE (только через .env) ===
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
@@ -72,6 +80,7 @@ DATABASES = {
     }
 }
 
+# === PASSWORD VALIDATORS ===
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
     {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
@@ -79,51 +88,39 @@ AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
+# === INTERNATIONALIZATION ===
 LANGUAGE_CODE = 'ru-ru'
 TIME_ZONE = 'Europe/Moscow'
 USE_I18N = True
 USE_TZ = True
 
+# === STATIC & MEDIA ===
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
-
-STATICFILES_DIRS = [
-    BASE_DIR / 'static',           # корневая папка static
-]
+STATICFILES_DIRS = [BASE_DIR / 'static']
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
-# Увеличиваем лимит загрузки файлов в Django до 300 МБ
-DATA_UPLOAD_MAX_MEMORY_SIZE = 314572800    # 300 МБ
-FILE_UPLOAD_MAX_MEMORY_SIZE = 314572800    # 300 МБ
+DATA_UPLOAD_MAX_MEMORY_SIZE = 314572800
+FILE_UPLOAD_MAX_MEMORY_SIZE = 314572800
 
-# Дополнительно (рекомендуется)
-DATA_UPLOAD_MAX_NUMBER_FILES = 100
+# === AUTH ===
+LOGIN_URL = '/admin/login/'
+LOGIN_REDIRECT_URL = '/'
+LOGOUT_REDIRECT_URL = '/'
 
-# ====================== АВТОРИЗАЦИЯ ======================
-LOGIN_URL = '/admin/login/'        # логин теперь только в админке
-LOGIN_REDIRECT_URL = '/'           # после входа в админку — на главную
-LOGOUT_REDIRECT_URL = '/'          # после выхода — на главную'
-
-CACHES = {
-    'default': {
-        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
-    }
-}
-
-SILENCED_SYSTEM_CHECKS = ['django_ratelimit.E003', 'django_ratelimit.W001']
-
-# CSRF настройки для максимальной совместимости
-CSRF_COOKIE_NAME = 'csrftoken'
-CSRF_COOKIE_HTTPONLY = False          # ← критично для JS
-CSRF_COOKIE_SAMESITE = 'Lax'          # или 'None' если будешь HTTPS + Secure
-CSRF_TRUSTED_ORIGINS = [
+# === CSRF & SECURITY HEADERS ===
+CSRF_COOKIE_HTTPONLY = env.bool('CSRF_COOKIE_HTTPONLY', default=False)
+CSRF_TRUSTED_ORIGINS = env.list('CSRF_TRUSTED_ORIGINS', default=[
     'https://ninjaprompt.ru',
     'https://www.ninjaprompt.ru',
-    'https://*.ninjaprompt.ru',
-]
+])
 
-# Рекомендуется в production
-SECURE_SSL_REDIRECT = True
+SECURE_SSL_REDIRECT = env.bool('SECURE_SSL_REDIRECT', default=True)
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+SECURE_HSTS_SECONDS = 31536000
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+SECURE_HSTS_PRELOAD = True
+
+SILENCED_SYSTEM_CHECKS = ['django_ratelimit.E003', 'django_ratelimit.W001']
