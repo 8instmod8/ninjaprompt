@@ -11,6 +11,20 @@ class Category(models.Model):
     description = models.TextField(blank=True, verbose_name="Описание")
     order = models.PositiveIntegerField(default=0, verbose_name="Порядок в фильтрах")
 
+    # === Новое поле ===
+    DISPLAY_TYPE_CHOICES = [
+        ('single', 'Одиночное фото'),
+        ('carousel', 'Карусель'),
+        ('slider', 'Шторка (До/После)'),
+    ]
+
+    display_type = models.CharField(
+        max_length=20,
+        choices=DISPLAY_TYPE_CHOICES,
+        default='single',
+        verbose_name="Тип отображения карточек"
+    )
+
     class Meta:
         verbose_name = "Категория"
         verbose_name_plural = "Категории"
@@ -18,7 +32,6 @@ class Category(models.Model):
 
     def __str__(self):
         return self.name
-
 
 class Subcategory(models.Model):
     category = models.ForeignKey(
@@ -61,6 +74,40 @@ class Group(models.Model):
         return self.name
 
 
+class ContentItemPhoto(models.Model):
+    """Модель для хранения нескольких фото на одну карточку"""
+    content_item = models.ForeignKey(
+        'ContentItem',
+        on_delete=models.CASCADE,
+        related_name='photos',
+        verbose_name="Карточка"
+    )
+    photo = models.ImageField(
+        upload_to='photos/multiple/%Y/%m/%d/',
+        verbose_name="Фото"
+    )
+    order = models.PositiveIntegerField(default=0, verbose_name="Порядок отображения")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Фото карточки"
+        verbose_name_plural = "Фото карточек"
+        ordering = ['order', 'created_at']
+
+    def __str__(self):
+        return f"Фото #{self.order} для {self.content_item}"
+
+    def delete(self, *args, **kwargs):
+        """Удаляем файл при удалении записи"""
+        if self.photo:
+            try:
+                if os.path.isfile(self.photo.path):
+                    os.remove(self.photo.path)
+            except Exception:
+                pass
+        super().delete(*args, **kwargs)
+
+
 class ContentItem(models.Model):
     category = models.ForeignKey(
         Category,
@@ -87,7 +134,15 @@ class ContentItem(models.Model):
         verbose_name="Группа"
     )
 
-    photo = models.ImageField(upload_to='photos/', verbose_name="Фото")
+    # Legacy-поле (будет удалено после data migration)
+    photo = models.ImageField(
+        upload_to='photos/',
+        verbose_name="Фото (устарело)",
+        null=True,
+        blank=True,
+        editable=False
+    )
+
     full_text = models.TextField(verbose_name="Текст для копирования")
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -106,21 +161,66 @@ class ContentItem(models.Model):
             return self.subcategory.category
         return self.category
 
+    @property
+    def main_photo(self):
+       first = self.photos.first()
+       if first:
+           return first.photo  # объект ImageField
+       if self.photo:
+           return self.photo  # legacy
+       return None
+
+    @property
+    def has_multiple_photos(self):
+        """Проверка для условного рендеринга"""
+        return self.photos.count() > 1
+
+    @property
+    def display_type(self):
+        """Тип отображения карточки"""
+        if self.effective_category:
+            return self.effective_category.display_type
+        return 'single'
+
+    @property
+    def is_ugc(self):
+        return self.display_type == 'carousel'
+
+    @property
+    def is_upscale(self):
+        return self.display_type == 'slider'
+    
     def delete(self, *args, **kwargs):
-        """Удаляем файл фото при удалении карточки"""
+        """Удаляем все связанные фото при удалении карточки"""
+        # Удаляем все фото из ContentItemPhoto
+        for photo in self.photos.all():
+            photo.delete()
+        
+        # Удаляем legacy фото
         if self.photo:
             try:
                 if os.path.isfile(self.photo.path):
                     os.remove(self.photo.path)
             except Exception:
-                pass  # файл уже удалён или ошибка доступа
+                pass
         super().delete(*args, **kwargs)
 
 
-# ====================== Signal для queryset.delete() ======================
+# ====================== Signals ======================
 @receiver(post_delete, sender=ContentItem)
-def delete_photo_on_delete(sender, instance, **kwargs):
-    """Дополнительная гарантия удаления файла"""
+def delete_legacy_photo_on_delete(sender, instance, **kwargs):
+    """Дополнительная гарантия для legacy-поля"""
+    if instance.photo:
+        try:
+            if os.path.isfile(instance.photo.path):
+                os.remove(instance.photo.path)
+        except Exception:
+            pass
+
+
+@receiver(post_delete, sender=ContentItemPhoto)
+def delete_photo_file(sender, instance, **kwargs):
+    """Удаление файла новой модели"""
     if instance.photo:
         try:
             if os.path.isfile(instance.photo.path):

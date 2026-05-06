@@ -3,6 +3,8 @@ Django settings for mysite project.
 """
 
 from pathlib import Path
+
+import environ
 import os
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -56,15 +58,17 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'mysite.wsgi.application'
 
-# ====================== БАЗА ДАННЫХ (локально — SQLite) ======================
+env = environ.Env()
+environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'bibpro_db',      # ← из pgAdmin
-        'USER': 'gerhard',         # ← из pgAdmin
-        'PASSWORD': 'v0imya0tc4i5in4',           # ← из pgAdmin
-        'HOST': 'localhost',                # или 127.0.0.1
-        'PORT': '5432',
+        'NAME': env('DB_NAME'),
+        'USER': env('DB_USER'),
+        'PASSWORD': env('DB_PASSWORD'),
+        'HOST': env('DB_HOST'),
+        'PORT': env('DB_PORT'),
     }
 }
 

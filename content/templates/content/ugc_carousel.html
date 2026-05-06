@@ -1,0 +1,44 @@
+{% load static %}
+
+<!-- Swiper CSS -->
+<link rel="stylesheet" href="{% static 'css/swiper/swiper-bundle.min.css' %}">
+
+<div class="swiper ugc-swiper" style="width: 100%; border-radius: 12px; overflow: hidden;">
+    <div class="swiper-wrapper">
+        {% for photo in photos %}
+        <div class="swiper-slide">
+            <img src="{{ photo.photo.url }}" 
+                 alt="UGC фото {{ forloop.counter }}" 
+                 loading="lazy"
+                 style="width: 100%; height: auto; display: block; object-fit: cover;">
+        </div>
+        {% endfor %}
+    </div>
+    
+    <!-- Навигация -->
+    <div class="swiper-pagination"></div>
+    <div class="swiper-button-prev"></div>
+    <div class="swiper-button-next"></div>
+</div>
+
+<!-- Swiper JS -->
+<script src="{% static 'js/swiper/swiper-bundle.min.js' %}" defer></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    new Swiper('.ugc-swiper', {
+        loop: true,
+        speed: 600,
+        pagination: {
+            el: '.swiper-pagination',
+            clickable: true,
+        },
+        navigation: {
+            nextEl: '.swiper-button-next',
+            prevEl: '.swiper-button-prev',
+        },
+        lazy: true,
+        preloadImages: false,
+        watchSlidesProgress: true,
+    });
+});
+</script>

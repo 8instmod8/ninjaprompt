@@ -1,5 +1,5 @@
 // =============================================
-// main.js — Ninja Prompts
+// main.js — Ninja Prompts (обновлённая версия)
 // =============================================
 
 function getCookie(name) {
@@ -17,44 +17,54 @@ function getCookie(name) {
     return value;
 }
 
-async function copyText(id) {
-    const btn = document.querySelector(`[data-id="${id}"] .copy-btn`);
-    if (!btn) return;
+// ====================== АВТОМАТИЧЕСКОЕ КОПИРОВАНИЕ ======================
+function initCopyButtons() {
+    document.querySelectorAll('.copy-btn').forEach(button => {
+        button.addEventListener('click', async function() {
+            const itemId = this.dataset.id;
+            const originalText = this.innerHTML;
 
-    const original = btn.innerHTML;
-    btn.disabled = true;
-    btn.innerHTML = 'Копируем...';
+            this.disabled = true;
+            this.innerHTML = 'Копируем...';
 
-    try {
-        const res = await fetch(`/api/copy/${id}/`, {
-            method: 'POST',
-            headers: { 'X-CSRFToken': getCookie('csrftoken') },
-            credentials: 'same-origin'
+            try {
+                const res = await fetch(`/api/copy/${itemId}/`, {
+                    method: 'POST',
+                    headers: { 'X-CSRFToken': getCookie('csrftoken') },
+                    credentials: 'same-origin'
+                });
+
+                const data = await res.json();
+
+                if (data.success && data.text) {
+                    await navigator.clipboard.writeText(data.text);
+                    this.innerHTML = '✅ Скопировано!';
+                    this.style.backgroundColor = '#22c55e';
+
+                    setTimeout(() => {
+                        this.innerHTML = originalText;
+                        this.style.backgroundColor = '#111';
+                        this.disabled = false;
+                    }, 1800);
+                } else {
+                    throw new Error(data.error || 'Ошибка');
+                }
+            } catch (e) {
+                console.error(e);
+                this.innerHTML = '❌ Ошибка';
+                this.style.backgroundColor = '#ef4444';
+
+                setTimeout(() => {
+                    this.innerHTML = originalText;
+                    this.style.backgroundColor = '#111';
+                    this.disabled = false;
+                }, 2000);
+            }
         });
-
-        const data = await res.json();
-
-        if (data.success) {
-            await navigator.clipboard.writeText(data.text);
-            btn.innerHTML = '✓ Скопировано!';
-            setTimeout(() => {
-                btn.innerHTML = original;
-                btn.disabled = false;
-            }, 2500);
-        } else {
-            throw new Error(data.error || 'Неизвестная ошибка');
-        }
-    } catch (e) {
-        console.error(e);
-        btn.innerHTML = 'Ошибка';
-        setTimeout(() => {
-            btn.innerHTML = original;
-            btn.disabled = false;
-        }, 2000);
-    }
+    });
 }
 
-/* ====================== ЗАЩИТА ОТ СКРИНШОТОВ ====================== */
+// ====================== ЗАЩИТА ОТ СКРИНШОТОВ ======================
 let screenshotWarning = false;
 
 function triggerScreenshotProtection() {
@@ -71,7 +81,7 @@ function triggerScreenshotProtection() {
         text-align: center; flex-direction: column; font-family: inherit;
     `;
     overlay.innerHTML = `
-        <h1 style="font-size: 42px; margin: 0 0 20px 0;">⛔</h1>
+        <h1 style="font-size: 42px; margin: 0 0 20px 0;">Запрещено</h1>
         <p style="font-size: 20px; max-width: 620px;">
             Любое копирование контента запрещено.
         </p>
@@ -105,7 +115,8 @@ document.addEventListener('contextmenu', e => {
     }
 });
 
-// Автозапуск после загрузки страницы
+// ====================== ИНИЦИАЛИЗАЦИЯ ======================
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('%cNinja Prompts — защита и копирование активны', 'color: #2563eb; font-weight: 600');
+    initCopyButtons();
+    console.log('%cNinja Prompts — JS инициализирован', 'color: #2563eb; font-weight: 600');
 });

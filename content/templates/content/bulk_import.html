@@ -1,54 +1,59 @@
-{% extends "admin/base_site.html" %}
+{% extends "base.html" %}
+
+{% block title %}Массовый импорт промптов{% endblock %}
 
 {% block content %}
-<div style="max-width: 960px; margin: 40px auto; padding: 40px; background: #fff; border-radius: 16px; box-shadow: 0 10px 40px rgba(0,0,0,0.1);">
-
-    <h1 style="margin: 0 0 10px 0; font-size: 28px;">📦 Массовый импорт промптов</h1>
-    <p style="color: #555; font-size: 16px;">Загрузите Excel-файл и (по желанию) ZIP-архив с фотографиями.</p>
-
-    <div style="background: #f8f9fa; padding: 20px; border-radius: 12px; margin: 25px 0;">
-        <strong>Требуемые колонки в Excel:</strong><br><br>
-        <table style="width:100%; border-collapse: collapse; font-size: 15px;">
-            <thead>
-                <tr style="background:#e9ecef;">
-                    <th style="border:1px solid #dee2e6; padding:10px; text-align:left;">filename <span style="color:red;">*</span></th>
-                    <th style="border:1px solid #dee2e6; padding:10px; text-align:left;">category <span style="color:red;">*</span></th>
-                    <th style="border:1px solid #dee2e6; padding:10px; text-align:left;">group</th>
-                    <th style="border:1px solid #dee2e6; padding:10px; text-align:left;">prompt <span style="color:red;">*</span></th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td style="border:1px solid #dee2e6; padding:10px;">brun1 (1).JPG</td>
-                    <td style="border:1px solid #dee2e6; padding:10px;">Селфи</td>
-                    <td style="border:1px solid #dee2e6; padding:10px;">Брюнетки</td>
-                    <td style="border:1px solid #dee2e6; padding:10px;">Девушка в белом платье на фоне...</td>
-                </tr>
-            </tbody>
+<div style="max-width: 800px; margin: 40px auto; padding: 0 20px;">
+    <h1>📦 Массовый импорт промптов</h1>
+    
+    <div style="background: #f8f9fa; padding: 24px; border-radius: 16px; margin: 24px 0;">
+        <h3>📋 Формат Excel файла:</h3>
+        <table style="width: 100%; border-collapse: collapse; margin-top: 12px;">
+            <tr style="background: #e9ecef;">
+                <th style="padding: 8px; text-align: left; border: 1px solid #dee2e6;">A</th>
+                <th style="padding: 8px; text-align: left; border: 1px solid #dee2e6;">B</th>
+                <th style="padding: 8px; text-align: left; border: 1px solid #dee2e6;">C</th>
+                <th style="padding: 8px; text-align: left; border: 1px solid #dee2e6;">D</th>
+                <th style="padding: 8px; text-align: left; border: 1px solid #dee2e6;">E</th>
+                <th style="padding: 8px; text-align: left; border: 1px solid #dee2e6;">F (опционально)</th>
+            </tr>
+            <tr>
+                <td style="padding: 8px; border: 1px solid #dee2e6;">filename.jpg</td>
+                <td style="padding: 8px; border: 1px solid #dee2e6;">Категория</td>
+                <td style="padding: 8px; border: 1px solid #dee2e6;">Подкатегория</td>
+                <td style="padding: 8px; border: 1px solid #dee2e6;">Группа</td>
+                <td style="padding: 8px; border: 1px solid #dee2e6;">Промпт</td>
+                <td style="padding: 8px; border: 1px solid #dee2e6;">1.jpg,2.jpg,3.jpg</td>
+            </tr>
         </table>
-        <small style="color:#666;">• Группа — необязательная колонка<br>
-        • Фото должны называться точно так же, как в колонке <strong>filename</strong></small>
+        
+        <p style="margin-top: 16px; color: #666; font-size: 14px;">
+            <strong>Колонка F</strong> — несколько фото через запятую (опционально). 
+            Если не заполнена — используется фото из колонки A.
+        </p>
     </div>
 
-    <form method="post" enctype="multipart/form-data">
+    <form method="post" enctype="multipart/form-data" style="background: white; padding: 32px; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.06);">
         {% csrf_token %}
-
-        <div style="margin-bottom: 25px;">
-            {{ form.excel_file.label_tag }}
+        
+        <div style="margin-bottom: 24px;">
+            <label style="display: block; margin-bottom: 8px; font-weight: 600;">📊 Excel файл</label>
             {{ form.excel_file }}
-            <small style="color:#666;">{{ form.excel_file.help_text }}</small>
         </div>
-
-        <div style="margin-bottom: 30px;">
-            {{ form.photos_zip.label_tag }}
+        
+        <div style="margin-bottom: 24px;">
+            <label style="display: block; margin-bottom: 8px; font-weight: 600;">🖼️ ZIP с фотографиями (опционально)</label>
             {{ form.photos_zip }}
-            <small style="color:#666;">{{ form.photos_zip.help_text }}</small>
+            <small style="color: #666;">Загрузите ZIP-архив, если фото не в папке photos/</small>
         </div>
-
-        <button type="submit" style="padding: 14px 36px; font-size: 17px; background: #2563eb; color: white; border: none; border-radius: 12px; cursor: pointer;">
-            🚀 Импортировать карточки
+        
+        <button type="submit" style="background: #111; color: white; padding: 14px 32px; border: none; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer;">
+            🚀 Импортировать
         </button>
     </form>
-
+    
+    <div style="margin-top: 24px; padding: 16px; background: #fff3cd; border-radius: 12px; font-size: 14px;">
+        <strong>⚠️ Важно:</strong> Фото должны находиться в папке <code>/media/photos/</code> или быть загружены в ZIP.
+    </div>
 </div>
 {% endblock %}

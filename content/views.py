@@ -5,7 +5,7 @@ from django.views.decorators.http import require_POST
 from django_ratelimit.decorators import ratelimit
 from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
-from django.db import models   # ← обязательно добавить
+from django.db import models
 
 from .models import ContentItem, Group, Subcategory, Category
 from django.core.paginator import Paginator
@@ -32,7 +32,7 @@ def copy_content(request, pk):
 def content_list(request):
     items = ContentItem.objects.select_related(
         'category', 'subcategory__category', 'group'
-    ).order_by('-created_at')
+    ).prefetch_related('photos').order_by('-created_at')  # ← оптимизация
 
     paginator = Paginator(items, 20)
     page_obj = paginator.get_page(request.GET.get('page', 1))
@@ -56,7 +56,9 @@ def category_detail(request, slug):
 
     items = ContentItem.objects.filter(
         models.Q(category=top_category) | models.Q(subcategory__category=top_category)
-    ).select_related('category', 'subcategory__category', 'group').order_by('-created_at')
+    ).select_related(
+        'category', 'subcategory__category', 'group'
+    ).prefetch_related('photos').order_by('-created_at')  # ← оптимизация
 
     paginator = Paginator(items, 20)
     page_obj = paginator.get_page(request.GET.get('page'))
@@ -83,7 +85,8 @@ def subcategory_detail(request, category_slug, subcategory_slug):
     subcategory = get_object_or_404(Subcategory, slug=subcategory_slug, category=top_category)
 
     items = ContentItem.objects.filter(subcategory=subcategory)\
-        .select_related('category', 'group').order_by('-created_at')
+        .select_related('category', 'group')\
+        .prefetch_related('photos').order_by('-created_at')  # ← оптимизация
 
     paginator = Paginator(items, 20)
     page_obj = paginator.get_page(request.GET.get('page'))
@@ -107,24 +110,25 @@ def subcategory_detail(request, category_slug, subcategory_slug):
 def group_detail(request, slug):
     group = get_object_or_404(Group, slug=slug)
     items = ContentItem.objects.filter(group=group)\
-        .select_related('category', 'subcategory__category').order_by('-created_at')
+        .select_related('category', 'subcategory__category')\
+        .prefetch_related('photos').order_by('-created_at')  # ← оптимизация
 
     top_categories = Category.objects.filter(order__gt=0).order_by('order')
     categories = Subcategory.objects.select_related('category').order_by('category__order', 'name')
 
     return render(request, 'content/group_detail.html', {
         'group': group,
-        'items': items,
+        'items': items,  # здесь не пагинация (оставил как было)
         'categories': categories,
         'top_categories': top_categories,
         'is_admin': request.user.is_superuser,
     })
 
 
-# ====================== Bulk Import (с обязательной категорией) ======================
+# ====================== Bulk Import ======================
 @staff_member_required
 def bulk_import_view(request):
-    """Массовый импорт — категория обязательна"""
+    """Массовый импорт — поддержка нескольких фото через запятую"""
     if request.method == 'POST':
         form = BulkImportForm(request.POST, request.FILES)
         if form.is_valid():
@@ -152,6 +156,7 @@ def bulk_import_view(request):
                 subcategory_name = values[2] if len(values) > 2 else ''
                 group_name = values[3] if len(values) > 3 else ''
                 prompt = values[4] if len(values) > 4 else ''
+                photos_str = values[5] if len(values) > 5 else ''  # ← НОВОЕ: несколько фото через запятую
 
                 if not filename or not category_name or not prompt:
                     errors.append(f"Строка {row_num}: filename, category и prompt — обязательны")
@@ -163,40 +168,32 @@ def bulk_import_view(request):
                     errors.append(f"Строка {row_num}: категория «{category_name}» не найдена")
                     continue
 
-                subcategory = None
-                if subcategory_name:
-                    subcategory = Subcategory.objects.filter(
-                        category=category, name__iexact=subcategory_name
-                    ).first()
+                # ... (код создания subcategory и group — оставь как был)
 
-                group = None
-                if group_name:
-                    group = Group.objects.filter(name__iexact=group_name).first()
-                    if not group:
-                        try:
-                            base_slug = translit(group_name, 'ru', reversed=True)
-                            base_slug = slugify(base_slug)
-                        except:
-                            base_slug = slugify(group_name)
-                        slug = base_slug
-                        counter = 2
-                        while Group.objects.filter(slug=slug).exists():
-                            slug = f"{base_slug}-{counter}"
-                            counter += 1
-                        group = Group.objects.create(name=group_name, slug=slug)
-
-                photo_path = os.path.join('photos', filename)
-                if not os.path.exists(os.path.join(settings.MEDIA_ROOT, photo_path)):
-                    errors.append(f"Строка {row_num}: файл {filename} не найден")
-                    continue
-
-                ContentItem.objects.create(
+                # Создаём карточку
+                item = ContentItem.objects.create(
                     category=category,
                     subcategory=subcategory,
                     group=group,
-                    photo=photo_path,
                     full_text=prompt
                 )
+
+                # Добавляем фото (несколько через запятую или одно)
+                photo_files = [f.strip() for f in photos_str.split(',') if f.strip()] if photos_str else [filename]
+                
+                for idx, photo_file in enumerate(photo_files):
+                    photo_path = os.path.join('photos', photo_file)
+                    full_path = os.path.join(settings.MEDIA_ROOT, photo_path)
+                    
+                    if os.path.exists(full_path):
+                        ContentItemPhoto.objects.create(
+                            content_item=item,
+                            photo=photo_path,
+                            order=idx
+                        )
+                    else:
+                        errors.append(f"Строка {row_num}: файл {photo_file} не найден")
+
                 created += 1
 
             if created:
