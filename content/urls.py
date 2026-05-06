@@ -4,15 +4,13 @@ from . import views
 app_name = 'content'
 
 urlpatterns = [
-    path('', views.content_list, name='content_list'),
-    
+    path('', views.home, name='home'),    
+    path('prompts/', views.content_list, name='content_list'), 
+
     # Группы — должны быть выше общих slug!
     path('group/<slug:slug>/', views.group_detail, name='group_detail'),
     
-    # Топ-категория
     path('<slug:slug>/', views.category_detail, name='category_detail'),
-    
-    # Подкатегория
     path('<slug:category_slug>/<slug:subcategory_slug>/', 
          views.subcategory_detail, name='subcategory_detail'),
     

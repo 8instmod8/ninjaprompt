@@ -18,6 +18,23 @@ from django.conf import settings
 from django.utils.text import slugify
 from transliterate import translit
 
+def home(request):
+    from .models import ContentItem, ContentItemPhoto
+
+    # Динамическое количество промптов
+    total_prompts = ContentItem.objects.count()
+
+    # Фото только из нужных категорий
+    photos = ContentItemPhoto.objects.filter(
+        content_item__category__slug__in=['photo-sessions', 'man-photo-sessions']
+    ).select_related('content_item').order_by('-created_at')[:15]
+
+    photo_urls = [photo.photo.url for photo in photos if photo.photo]
+
+    return render(request, 'content/home.html', {
+        'total_prompts': total_prompts,
+        'photo_urls': photo_urls,
+    })
 
 @require_POST
 @ratelimit(key='user', rate='10/m', block=True)
@@ -208,3 +225,4 @@ def bulk_import_view(request):
         form = BulkImportForm()
 
     return render(request, 'content/bulk_import.html', {'form': form})
+

@@ -1,0 +1,144 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" href="{% static 'images/ninp.png' %}" type="image/png">
+    <link rel="apple-touch-icon" href="{% static 'images/ninp.png' %}">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NinjaPrompt — Будущее уже здесь</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Space+Grotesk:wght@500;600&amp;display=swap');
+        
+        body { font-family: 'Inter', system_ui, sans-serif; }
+        .font-display { font-family: 'Space Grotesk', 'Inter', system_ui, sans-serif; }
+        .ninja-text { font-weight: 900; letter-spacing: -0.065em; line-height: 0.88; }
+        
+        .device-frame {
+            box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.45),
+                        0 0 0 1px rgb(63 63 70 / 0.35),
+                        inset 0 1px 0 rgb(255 255 255 / 0.08);
+        }
+    </style>
+</head>
+<body class="bg-zinc-950 text-white">
+    	<!-- ========== ХЕДЕР (подогнан под стандартный стиль проекта) ========== -->
+	<nav class="sticky top-0 z-50 bg-zinc-950/95 backdrop-blur-lg border-b border-zinc-800">
+    	<div class="max-w-screen-2xl mx-auto px-8">
+        	<div class="flex items-center justify-between" style="padding: 20px 0;">   <!-- ← как в main.css -->
+            
+            	<!-- ЛОГОТИП (58px как в стандартном хедере) -->
+            	<div class="flex items-center">
+                	<img src="{% static 'images/ninja-prompt.png' %}" 
+                     alt="Ninja Prompt" 
+                     class="h-[58px] w-auto filter brightness-0 invert">
+            	</div>
+
+            	<!-- Навигация -->
+            	<div class="hidden md:flex items-center gap-x-9 text-[15px] font-medium">
+			<a href="/prompts" class="text-white hover:text-zinc-300 transition-colors">Готовые промпты</a>
+                	<a href="/school" class="text-white hover:text-zinc-300 transition-colors">Обучение</a>
+                	<a href="/about" class="text-white hover:text-zinc-300 transition-colors">О нас</a>
+            	</div>
+
+            	<!-- Соцсети справа -->
+            	<div class="flex items-center gap-x-5">
+                	<a href="https://t.me/ninjaprompt" target="_blank" class="text-white hover:text-zinc-400 transition-colors">
+                	    <i class="fa-brands fa-telegram text-[22px]"></i>
+                	</a>
+                	<a href="https://instagram.com/ninjapromt" target="_blank" class="text-white hover:text-zinc-400 transition-colors">
+                	    <i class="fa-brands fa-instagram text-[22px]"></i>
+                	</a>
+            	</div>
+        	</div>
+	    </div>
+	</nav>
+    <!-- ========== HERO ========== -->
+    <section class="relative min-h-[100dvh] flex items-center pt-6 pb-16 overflow-hidden">
+        
+        <!-- Красные световые пятна -->
+        <div class="absolute inset-0 pointer-events-none">
+            <div class="absolute -top-40 -left-32 w-[540px] h-[540px] bg-red-600/20 rounded-full blur-[140px]"></div>
+            <div class="absolute top-1/3 right-[-100px] w-[460px] h-[460px] bg-orange-500/10 rounded-full blur-[110px]"></div>
+            <div class="absolute bottom-[-80px] left-1/4 w-[420px] h-[420px] bg-red-500/10 rounded-full blur-[100px]"></div>
+        </div>
+
+        <div class="max-w-screen-2xl mx-auto px-6 md:px-12 relative z-10">
+            <div class="grid md:grid-cols-2 gap-12 lg:gap-20 items-center">
+                
+		<!-- ========== БОЛЬШАЯ СЕКЦИЯ (50% экрана) ========== -->
+		<div class="relative flex justify-center md:justify-start w-full max-w-[620px]">
+    			<div class="relative w-full bg-zinc-900 border border-zinc-700 rounded-[3.5rem] p-4 shadow-2xl">
+        
+        		<!-- Карусель фотографий (портрет) -->
+        		<div class="relative w-full aspect-[9/14] rounded-[2.75rem] overflow-hidden bg-black" id="photo-carousel">
+            			{% for url in photo_urls %}
+                			<img src="{{ url }}" 
+                     			class="absolute inset-0 w-full h-full object-cover transition-opacity duration-700"
+                     			style="opacity: {% if forloop.first %}1{% else %}0{% endif %};"
+                     			data-index="{{ forloop.counter0 }}">
+            			{% empty %}
+                		<div class="absolute inset-0 bg-gradient-to-br from-red-950 to-zinc-950 flex items-center justify-center">
+                    			<span class="text-white/50">Нет фото в БД</span>
+                		</div>
+            			{% endfor %}
+		        </div>
+
+        		<!-- Динамический бейдж -->
+        		<div class="absolute bottom-8 left-8 bg-zinc-950/90 backdrop-blur-md border border-zinc-700 rounded-2xl px-6 py-4 flex items-center gap-x-4 shadow-xl">
+            			<div class="text-red-500 text-[52px] font-black tracking-tighter">{{ total_prompts }}+</div>
+            				<div class="text-sm leading-tight text-zinc-400">
+                				Авторских<br>
+                				<span class="font-semibold text-white">промтов</span>
+            				</div>
+        			</div>
+    			</div>
+		</div>
+                <!-- Текст + CTA -->
+                <div class="max-w-[600px]">
+                    <h1 class="font-display text-[58px] md:text-[74px] lg:text-[80px] leading-[0.95] font-extrabold tracking-[-3.4px]">
+                        Будущее уже<br>
+                        <span class="bg-gradient-to-r from-white via-zinc-100 to-zinc-300 bg-clip-text text-transparent">здесь.</span>
+                    </h1>
+                    
+                    <p class="mt-5 text-[33px] md:text-[36px] text-zinc-300 font-medium tracking-[-0.5px]">
+                        Научись им управлять
+                    </p>
+
+                    <div class="mt-9">
+                        <a href="/school" 
+                           class="group inline-flex items-center justify-center gap-x-4 px-11 py-[21px] rounded-3xl bg-gradient-to-r from-red-600 to-orange-500 text-white font-semibold text-[21px] shadow-[0_15px_35px_-12px_rgb(239,68,68)] hover:shadow-[0_25px_50px_-15px_rgb(249,115,22)] transition-all active:scale-[0.985]">
+                            От новичка до AI-профессионала<br>за 30 дней
+                            <i class="fa-solid fa-arrow-right text-xl group-hover:translate-x-1 transition"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+<script>
+    // Автоматическая карусель фотографий
+    function initPhotoCarousel() {
+        const carousel = document.getElementById('photo-carousel');
+        if (!carousel) return;
+
+        const images = carousel.querySelectorAll('img');
+        if (images.length <= 1) return;
+
+        let current = 0;
+
+        setInterval(() => {
+            images[current].style.opacity = '0';
+            current = (current + 1) % images.length;
+            images[current].style.opacity = '1';
+        }, 2800);
+    }
+
+    window.onload = function() {
+        initPhotoCarousel();
+    }
+</script>
+</body>
+</html>
