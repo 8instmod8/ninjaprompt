@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block title %}404 — Страница не найдена | Ninja Prompts{% endblock %}
+
+{% block content %}
+<div style="max-width: 600px; margin: 80px auto; text-align: center; padding: 40px 20px;">
+    
+    <!-- Большая цифра -->
+    <div style="font-size: 120px; font-weight: 800; color: #faaf2d; line-height: 1; margin-bottom: 20px;">
+        404
+    </div>
+
+    <h1 style="font-size: 32px; margin-bottom: 16px; color: #111;">
+        Ой! Ниндзя промахнулся
+    </h1>
+
+    <p style="font-size: 18px; color: #555; margin-bottom: 40px; line-height: 1.6;">
+        Такой страницы не существует.<br>
+        Возможно, страница  была перемещёна или удалёна.
+    </p>
+
+    <!-- Кнопка возврата -->
+    <a href="{% url 'content:content_list' %}" 
+       style="display: inline-block; 
+              background: #faaf2d; 
+              color: white; 
+              padding: 14px 36px; 
+              font-size: 16px; 
+              font-weight: 600; 
+              text-decoration: none; 
+              border-radius: 8px;
+              transition: background 0.2s;">
+        ← Вернуться в библиотеку промптов
+    </a>
+    <div style="margin-top: 60px; color: #999; font-size: 14px;">
+        Если ты попал сюда по ссылке — проверь адрес или напиши нам в Telegram
+    </div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,14 @@
+{# content/templates/content/_pagination.html #}
+{% if paginator.num_pages > 1 %}
+<div class="pagination">
+    {% if page_obj.has_previous %}
+        <a href="?page={{ page_obj.previous_page_number }}" aria-label="Предыдущая страница">← Назад</a>
+    {% endif %}
+
+    <span>Страница <strong>{{ page_obj.number }}</strong> из {{ paginator.num_pages }}</span>
+
+    {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}" aria-label="Следующая страница">Вперёд →</a>
+    {% endif %}
+</div>
+{% endif %}

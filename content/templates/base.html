@@ -10,47 +10,67 @@
 
     <!-- Основные стили -->
     <link rel="stylesheet" href="{% static 'css/main.css' %}">
+
+    <!-- Font Awesome (для иконок Telegram и Instagram) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
     {% block extra_css %}{% endblock %}
 </head>
 <body>
 
     <!-- ====================== HEADER ====================== -->
     {% block header %}
-    <header>
-        <a href="{% url 'content:content_list' %}" style="text-decoration: none; display: block;">
-            <img src="{% static 'images/ninja-prompt.png' %}" alt="Ninja Prompt" class="logo">
-        </a>
-	<!-- Основные категории (Top Level) -->
-            <div class="top-categories">
-                {% for top in top_categories %}
-                    <a href="{% url 'content:category_detail' top.slug %}" 
-                       class="top-category {% if top.slug == top_category.slug %}active{% endif %}">
-                        {{ top.name }}
-                    </a>
-                {% endfor %}
-            </div>
-        {% block search %}
-        <!-- Поиск будет переопределяться в list.html -->
-        {% endblock %}
+<header>
+    <a href="/" style="text-decoration: none; display: block;">
+        <img src="{% static 'images/ninja-prompt.png' %}" alt="Ninja Prompt" class="logo">
+    </a>
 
+    <!-- Основные категории (слева) -->
+    <div class="top-categories" style="flex: none;">
+        {% for top in top_categories %}
+            <a href="{% url 'content:category_detail' top.slug %}" 
+               class="top-category {% if top.slug == top_category.slug %}active{% endif %}">
+                {{ top.name }}
+            </a>
+        {% endfor %}
+    </div>
+
+    <!-- Правая группа: Обучение / О нас + User Panel -->
+    <div style="margin-left: auto; display: flex; align-items: center; gap: 24px;">
+        
+        <!-- Ссылки справа -->
+        <div class="top-categories">
+            <a href="/school" class="top-category">Обучение</a>
+            <a href="/about" class="top-category">О нас</a>
+        </div>
+
+        <!-- User Panel -->
         <div class="user-panel">
             {% if is_admin %}
                 <button class="add-btn" onclick="location.href='/admin/content/contentitem/add/'">+</button>
             {% endif %}
 
-            <!-- Telegram -->
-            <a href="https://t.me/ninjaprompt" 
-               target="_blank" 
-               rel="noopener noreferrer"
-               class="telegram-link"
-               title="Telegram-канал Ninja Prompts"
-               aria-label="Telegram">
-                <img src="{% static 'images/telega.png' %}" alt="Telegram" class="telegram-icon">
-            </a>
-        </div>
-    </header>
-    {% endblock %}
+            <div class="flex items-center gap-x-3">
+                <a href="https://t.me/ninjaprompt" 
+                   target="_blank" 
+                   rel="noopener noreferrer"
+                   aria-label="Telegram">
+                    <i class="fa-brands fa-telegram social-icon"></i>
+                </a>
 
+                <span class="social-divider"></span>
+
+                <a href="https://www.instagram.com/ninjapromt?igsh=MTFlZXY0ZHNqcWxlaQ%3D%3D&utm_source=qr" 
+                   target="_blank" 
+                   rel="noopener noreferrer"
+                   aria-label="Instagram">
+                    <i class="fa-brands fa-instagram social-icon"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</header>
+{% endblock %}	
     {% block filters %}{% endblock %}
 
     {% block content %}{% endblock %}

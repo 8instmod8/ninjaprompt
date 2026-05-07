@@ -3,20 +3,22 @@
 {% block title %}Ninja Prompts - {{ category.name }}{% endblock %}
 
 {% block filters %}
-<div class="filters">
-    <!-- Кнопка "Все" -->
-    <a href="{% url 'content:category_detail' top_category.slug %}" 
-       class="filter-chip {% if is_top_category %}active{% endif %}">
-        Все
-    </a>
-
-    {% for cat in categories %}
-        <a href="{% url 'content:subcategory_detail' top_category.slug cat.slug %}" 
-           class="filter-chip {% if cat.slug == category.slug %}active{% endif %}">
-            {{ cat.name }}
+    {% if categories %}
+    <div class="filters">
+        <!-- Кнопка "Все" -->
+        <a href="{% url 'content:category_detail' top_category.slug %}" 
+           class="filter-chip {% if is_top_category %}active{% endif %}">
+            Все
         </a>
-    {% endfor %}
-</div>
+
+        {% for cat in categories %}
+            <a href="{% url 'content:subcategory_detail' top_category.slug cat.slug %}" 
+               class="filter-chip {% if cat.slug == category.slug %}active{% endif %}">
+                {{ cat.name }}
+            </a>
+        {% endfor %}
+    </div>
+    {% endif %}
 {% endblock %}
 
 {% block content %}
@@ -29,48 +31,38 @@
 
     <div class="grid">
         {% for item in items %}
-        <div class="card" data-id="{{ item.id }}" data-category="{{ item.effective_category.slug }}">
-	    <div style="position:relative;" class="photo-container">
-                {% if item.is_ugc and item.has_multiple_photos %}
-                    {% include "content/ugc_carousel.html" with photos=item.photos.all %}
-                {% elif item.is_upscale and item.has_multiple_photos %}
-                    {% include "content/upscale_slider.html" with photos=item.photos.all %}
-                {% else %}
-                    <img src="{{ item.main_photo.url }}" 
-                         alt="{{ item.effective_category.name }}"
-                         loading="lazy"
-                         class="main-photo">
-                {% endif %}
-                
-                <div class="category-badge">{{ item.effective_category.name }}</div>
-            </div>
-            <div class="card-body">
-                {% if item.group %}
-                    <a href="{% url 'content:group_detail' item.group.slug %}" 
-                       class="group-name-badge">{{ item.group.name }}</a>
-                {% endif %}
+<div class="card" data-id="{{ item.id }}" data-category="{{ item.effective_category.slug }}">
+    <div class="photo-container">
+        {% if item.is_ugc and item.has_multiple_photos %}
+            {% include "content/ugc_carousel.html" with photos=item.photos.all %}
+        {% elif item.is_upscale and item.has_multiple_photos %}
+            {% include "content/upscale_slider.html" with photos=item.photos.all %}
+        {% else %}
+            <img src="{{ item.main_photo.url }}" 
+                 alt="{{ item.effective_category.name }}"
+                 loading="lazy"
+                 class="main-photo">
+        {% endif %}
+        
+        <div class="category-badge">{{ item.effective_category.name }}</div>
+    </div>
 
-                {% if item.subcategory %}
-                    <!-- Есть подкатегория -->
-                    <a href="{% url 'content:subcategory_detail' item.effective_category.slug item.subcategory.slug %}" 
-                       class="group-name-badge">
-                        {{ item.subcategory.name }}
-                    </a>
-                {% else %}
-                    <!-- Только категория -->
-                    <a href="{% url 'content:category_detail' item.effective_category.slug %}" 
-                       class="group-name-badge">
-                        {{ item.effective_category.name }}
-                    </a>
-                {% endif %}
+    <div class="card-body">
+        <div class="tags">
+    		{% if item.group %}
+        		<a href="{% url 'content:group_detail' item.group.slug %}" 
+          		 class="group-name-badge">{{ item.group.name }}</a>
+    		{% endif %}
 
-                <button onclick="copyText({{ item.id }})" class="copy-btn">📋 Скопировать промпт</button>
-            </div>
-        </div>
-        {% empty %}
-            <p style="grid-column: 1 / -1; text-align: center; padding: 100px; color: #999;">
-                В этой категории пока нет промптов.
-            </p>
+    		{% if item.subcategory %}
+        		<a href="{% url 'content:subcategory_detail' item.effective_category.slug item.subcategory.slug %}" 
+           		class="group-name-badge">{{ item.subcategory.name }}</a>
+    		{% endif %}
+	</div>
+     <button class="copy-btn" data-id="{{ item.id }}">Скопировать промпт</button>
+    </div>
+</div>
         {% endfor %}
     </div>
+	{% include "content/_pagination.html" %}
 {% endblock %}
