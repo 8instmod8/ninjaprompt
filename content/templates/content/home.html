@@ -26,35 +26,54 @@
 <body class="bg-zinc-950 text-white">
     	<!-- ========== ХЕДЕР (подогнан под стандартный стиль проекта) ========== -->
 	<nav class="sticky top-0 z-50 bg-zinc-950/95 backdrop-blur-lg border-b border-zinc-800">
-    	<div class="max-w-screen-2xl mx-auto px-8">
-        	<div class="flex items-center justify-between" style="padding: 20px 0;">   <!-- ← как в main.css -->
-            
-            	<!-- ЛОГОТИП (58px как в стандартном хедере) -->
-            	<div class="flex items-center">
-                	<img src="{% static 'images/ninja-prompt.png' %}" 
-                     alt="Ninja Prompt" 
-                     class="h-[58px] w-auto filter brightness-0 invert">
-            	</div>
+        <div class="max-w-screen-2xl mx-auto px-8">
+            <div class="flex items-center justify-between" style="padding: 20px 0;">
+                <!-- Логотип -->
+                <div class="flex items-center">
+                    <img src="{% static 'images/ninja-prompt.png' %}"
+                        alt="Ninja Prompt"
+                        class="h-[58px] w-auto filter brightness-0 invert">
+                </div>
 
-            	<!-- Навигация -->
-            	<div class="hidden md:flex items-center gap-x-9 text-[15px] font-medium">
-			<a href="/prompts" class="text-white hover:text-zinc-300 transition-colors">Готовые промпты</a>
-                	<a href="/school" class="text-white hover:text-zinc-300 transition-colors">Обучение</a>
-                	<a href="/about" class="text-white hover:text-zinc-300 transition-colors">О нас</a>
-            	</div>
+                <!-- Десктоп-меню -->
+                <div class="hidden md:flex items-center gap-x-9 text-[15px] font-medium">
+                    <a href="/prompts" class="text-white hover:text-zinc-300 transition-colors">Готовые промпты</a>
+                    <a href="/school" class="text-white hover:text-zinc-300 transition-colors">Обучение</a>
+                    <a href="/about" class="text-white hover:text-zinc-300 transition-colors">О нас</a>
+                </div>
 
-            	<!-- Соцсети справа -->
-            	<div class="flex items-center gap-x-5">
-                	<a href="https://t.me/ninjaprompt" target="_blank" class="text-white hover:text-zinc-400 transition-colors">
-                	    <i class="fa-brands fa-telegram text-[22px]"></i>
-                	</a>
-                	<a href="https://instagram.com/ninjapromt" target="_blank" class="text-white hover:text-zinc-400 transition-colors">
-                	    <i class="fa-brands fa-instagram text-[22px]"></i>
-                	</a>
-            	</div>
-        	</div>
-	    </div>
-	</nav>
+                <!-- Соцсети + бургер (мобильный) -->
+                <div class="flex items-center gap-x-5">
+                    <a href="https://t.me/ninjaprompt" target="_blank"
+                    class="text-white hover:text-zinc-400 transition-colors">
+                        <i class="fa-brands fa-telegram text-[22px]"></i>
+                    </a>
+                    <a href="https://instagram.com/ninjapromt" target="_blank"
+                    class="text-white hover:text-zinc-400 transition-colors">
+                        <i class="fa-brands fa-instagram text-[22px]"></i>
+                    </a>
+
+                    <!-- Бургер-кнопка -->
+                    <button id="mobile-menu-btn"
+                            class="md:hidden flex items-center justify-center w-10 h-10 text-white hover:text-zinc-300 transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 rounded-xl"
+                            aria-label="Открыть меню навигации"
+                            aria-expanded="false">
+                        <i class="fa-solid fa-bars text-xl" id="burger-icon"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Мобильное меню -->
+            <div id="mobile-menu"
+                class="hidden md:hidden border-t border-zinc-800 bg-zinc-950/95 backdrop-blur-lg">
+                <div class="px-8 py-6 flex flex-col gap-y-1 text-[15px] font-medium">
+                    <a href="/prompts" class="py-3 text-white hover:text-red-400 transition-colors">Готовые промпты</a>
+                    <a href="/school" class="py-3 text-white hover:text-red-400 transition-colors">Обучение</a>
+                    <a href="/about" class="py-3 text-white hover:text-red-400 transition-colors">О нас</a>
+                </div>
+            </div>
+        </div>
+    </nav>
     <!-- ========== HERO ========== -->
     <section class="relative min-h-[100dvh] flex items-center pt-6 pb-16 overflow-hidden">
         
@@ -68,8 +87,7 @@
         <div class="max-w-screen-2xl mx-auto px-6 md:px-12 relative z-10">
             <div class="grid md:grid-cols-2 gap-12 lg:gap-20 items-center">
                 
-		<!-- ========== БОЛЬШАЯ СЕКЦИЯ (50% экрана) ========== -->
-		<div class="relative flex justify-center md:justify-start w-full max-w-[620px]">
+		<!-- ========== БОЛЬШАЯ СЕКЦИЯ (50% экрана) ========== -->		<div class="relative flex justify-center md:justify-start w-full max-w-[620px]">
     			<div class="relative w-full bg-zinc-900 border border-zinc-700 rounded-[3.5rem] p-4 shadow-2xl">
         
         		<!-- Карусель фотографий (портрет) -->
@@ -87,7 +105,7 @@
 		        </div>
 
         		<!-- Динамический бейдж -->
-        		<div class="absolute bottom-8 left-8 bg-zinc-950/90 backdrop-blur-md border border-zinc-700 rounded-2xl px-6 py-4 flex items-center gap-x-4 shadow-xl">
+			<div class="absolute bottom-8 left-8 bg-zinc-950/90 backdrop-blur-md border border-zinc-700 rounded-2xl px-6 py-4 flex items-center gap-x-4 shadow-xl">
             			<div class="text-red-500 text-[52px] font-black tracking-tighter">{{ total_prompts }}+</div>
             				<div class="text-sm leading-tight text-zinc-400">
                 				Авторских<br>
@@ -119,7 +137,6 @@
         </div>
     </section>
 <script>
-    // Автоматическая карусель фотографий
     function initPhotoCarousel() {
         const carousel = document.getElementById('photo-carousel');
         if (!carousel) return;
@@ -136,8 +153,56 @@
         }, 2800);
     }
 
+    function initMobileMenu() {
+        const btn = document.getElementById('mobile-menu-btn');
+        const menu = document.getElementById('mobile-menu');
+        const icon = document.getElementById('burger-icon');
+
+        if (!btn || !menu || !icon) return;
+
+        let isOpen = false;
+
+        btn.addEventListener('click', () => {
+            isOpen = !isOpen;
+            btn.setAttribute('aria-expanded', isOpen);
+
+            if (isOpen) {
+                menu.classList.remove('hidden');
+                icon.classList.remove('fa-bars');
+                icon.classList.add('fa-xmark');
+            } else {
+                menu.classList.add('hidden');
+                icon.classList.remove('fa-xmark');
+                icon.classList.add('fa-bars');
+            }
+        });
+
+        // Закрываем меню при клике на любую ссылку
+        menu.querySelectorAll('a').forEach(link => {
+            link.addEventListener('click', () => {
+                isOpen = false;
+                menu.classList.add('hidden');
+                icon.classList.remove('fa-xmark');
+                icon.classList.add('fa-bars');
+                btn.setAttribute('aria-expanded', 'false');
+            });
+        });
+
+        // Закрываем меню при переходе на десктоп (resize)
+        window.addEventListener('resize', () => {
+            if (window.innerWidth >= 768 && isOpen) {
+                isOpen = false;
+                menu.classList.add('hidden');
+                icon.classList.remove('fa-xmark');
+                icon.classList.add('fa-bars');
+                btn.setAttribute('aria-expanded', 'false');
+            }
+        });
+    }
+
     window.onload = function() {
         initPhotoCarousel();
+        initMobileMenu();
     }
 </script>
 </body>
