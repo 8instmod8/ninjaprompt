@@ -22,12 +22,10 @@
     {% block header %}
     <header>
         <div class="header-inner">
-            <!-- Логотип -->
             <a href="/" class="logo-link">
                 <img src="{% static 'images/ninja-prompt.png' %}" alt="Ninja Prompt" class="logo">
             </a>
 
-            <!-- Категории слева -->
             <div class="top-categories left-categories">
                 {% for top in top_categories %}
                     <a href="{% url 'content:category_detail' top.slug %}" 
@@ -37,41 +35,34 @@
                 {% endfor %}
             </div>
 
-            <!-- Правая часть (Обучение/О нас + User Panel + Бургер) -->
-
-
             <div class="header-right">
-                <!-- Обучение / О нас -->
                 <div class="top-categories">
                     <a href="/school" class="top-category">Обучение</a>
                     <a href="/about" class="top-category">О нас</a>
                 </div>
 
-                <!-- User Panel с иконками -->
                 <div class="user-panel">
                     {% if is_admin %}
                         <button class="add-btn" onclick="location.href='/admin/content/contentitem/add/'">+</button>
                     {% endif %}
 
-                    <div class="social-icons-row">
-                        <a href="https://t.me/ninjaprompt" target="_blank" rel="noopener noreferrer">
+                    <div class="mobile-header-actions">
+                        <a href="https://t.me/ninjaprompt" target="_blank">
                             <i class="fa-brands fa-telegram social-icon"></i>
                         </a>
-			<span class="social-divider"></span>
-                        <a href="https://www.instagram.com/ninjapromt" target="_blank" rel="noopener noreferrer">
+                        <span class="social-divider"></span>
+                        <a href="https://www.instagram.com/ninjapromt" target="_blank">
                             <i class="fa-brands fa-instagram social-icon"></i>
                         </a>
                     </div>
                 </div>
 
-                <!-- Бургер -->
                 <button id="mobile-menu-btn" class="burger-btn" aria-label="Меню" aria-expanded="false">
                     <i class="fa-solid fa-bars" id="burger-icon"></i>
                 </button>
             </div>
         </div>
 
-        <!-- Мобильное меню (только текст, без соцсетей) -->
         <div id="mobile-menu" class="mobile-menu">
             <div class="mobile-menu-content">
                 {% for top in top_categories %}

@@ -1,5 +1,5 @@
 // =============================================
-// main.js — Ninja Prompts (обновлённая версия)
+// main.js — Ninja Prompts (полная стабильная версия)
 // =============================================
 
 function getCookie(name) {
@@ -17,7 +17,33 @@ function getCookie(name) {
     return value;
 }
 
+// ====================== БУРГЕР МЕНЮ ======================
+function initMobileMenu() {
+    const btn = document.getElementById('mobile-menu-btn');
+    const menu = document.getElementById('mobile-menu');
+    const icon = document.getElementById('burger-icon');
 
+    if (!btn || !menu || !icon) return;
+
+    btn.addEventListener('click', () => {
+        const isOpen = menu.classList.toggle('open');
+        btn.setAttribute('aria-expanded', isOpen);
+
+        icon.classList.toggle('fa-bars', !isOpen);
+        icon.classList.toggle('fa-xmark', isOpen);
+    });
+
+    menu.querySelectorAll('a').forEach(link => {
+        link.addEventListener('click', () => {
+            menu.classList.remove('open');
+            icon.classList.remove('fa-xmark');
+            icon.classList.add('fa-bars');
+            btn.setAttribute('aria-expanded', 'false');
+        });
+    });
+}
+
+// ====================== КОПИРОВАНИЕ ПРОМПТОВ ======================
 function initCopyButtons() {
     document.querySelectorAll('.copy-btn').forEach(button => {
         button.addEventListener('click', async function() {
@@ -28,11 +54,10 @@ function initCopyButtons() {
             this.innerHTML = 'Копируем...';
 
             try {
-                // Получаем CSRF
                 let csrfToken = getCookie('csrftoken');
                 if (!csrfToken) {
-                    const csrfInput = document.querySelector('[name=csrfmiddlewaretoken]');
-                    if (csrfInput) csrfToken = csrfInput.value;
+                    const input = document.querySelector('[name=csrfmiddlewaretoken]');
+                    if (input) csrfToken = input.value;
                 }
 
                 const res = await fetch(`/api/copy/${itemId}/`, {
@@ -41,39 +66,37 @@ function initCopyButtons() {
                     credentials: 'same-origin'
                 });
 
-                if (!res.ok) throw new Error('Ошибка сервера');
+                if (!res.ok) throw new Error('Server error');
 
                 const data = await res.json();
-                if (!data.success || !data.text) throw new Error('Нет текста');
+                if (!data.success || !data.text) throw new Error('No text');
 
-                // Копирование с поддержкой iPhone
-                let copied = false;
+                let success = false;
 
                 if (navigator.clipboard && window.isSecureContext) {
                     try {
                         await navigator.clipboard.writeText(data.text);
-                        copied = true;
+                        success = true;
                     } catch (e) {}
                 }
 
-                if (!copied) {
-                    // Fallback для iPhone и старых браузеров
-                    const textArea = document.createElement('textarea');
-                    textArea.value = data.text;
-                    textArea.style.position = 'fixed';
-                    textArea.style.opacity = '0';
-                    document.body.appendChild(textArea);
-                    textArea.focus();
-                    textArea.select();
-                    copied = document.execCommand('copy');
-                    document.body.removeChild(textArea);
+                if (!success) {
+                    const ta = document.createElement('textarea');
+                    ta.value = data.text;
+                    ta.style.position = 'fixed';
+                    ta.style.opacity = '0';
+                    document.body.appendChild(ta);
+                    ta.focus();
+                    ta.select();
+                    success = document.execCommand('copy');
+                    document.body.removeChild(ta);
                 }
 
-                if (copied) {
+                if (success) {
                     this.innerHTML = '✅ Скопировано!';
                     this.style.backgroundColor = '#22c55e';
                 } else {
-                    throw new Error('Не удалось скопировать');
+                    throw new Error('Copy failed');
                 }
 
                 setTimeout(() => {
@@ -97,85 +120,6 @@ function initCopyButtons() {
     });
 }
 
-// ====================== АВТОМАТИЧЕСКОЕ КОПИРОВАНИЕ ======================
-function initCopyButtons() {
-    document.querySelectorAll('.copy-btn').forEach(button => {
-        button.addEventListener('click', async function() {
-            const itemId = this.dataset.id;
-            const originalText = this.innerHTML;
-
-            this.disabled = true;
-            this.innerHTML = 'Копируем...';
-
-            try {
-                // Получаем CSRF
-                let csrfToken = getCookie('csrftoken');
-                if (!csrfToken) {
-                    const csrfInput = document.querySelector('[name=csrfmiddlewaretoken]');
-                    if (csrfInput) csrfToken = csrfInput.value;
-                }
-
-                const res = await fetch(`/api/copy/${itemId}/`, {
-                    method: 'POST',
-                    headers: { 'X-CSRFToken': csrfToken || '' },
-                    credentials: 'same-origin'
-                });
-
-                if (!res.ok) throw new Error('Ошибка сервера');
-
-                const data = await res.json();
-                if (!data.success || !data.text) throw new Error('Нет текста');
-
-                // Копирование с поддержкой iPhone
-                let copied = false;
-
-                if (navigator.clipboard && window.isSecureContext) {
-                    try {
-                        await navigator.clipboard.writeText(data.text);
-                        copied = true;
-                    } catch (e) {}
-                }
-
-                if (!copied) {
-                    // Fallback для iPhone и старых браузеров
-                    const textArea = document.createElement('textarea');
-                    textArea.value = data.text;
-                    textArea.style.position = 'fixed';
-                    textArea.style.opacity = '0';
-                    document.body.appendChild(textArea);
-                    textArea.focus();
-                    textArea.select();
-                    copied = document.execCommand('copy');
-                    document.body.removeChild(textArea);
-                }
-
-                if (copied) {
-                    this.innerHTML = '✅ Скопировано!';
-                    this.style.backgroundColor = '#22c55e';
-                } else {
-                    throw new Error('Не удалось скопировать');
-                }
-
-                setTimeout(() => {
-                    this.innerHTML = originalText;
-                    this.style.backgroundColor = '#111';
-                    this.disabled = false;
-                }, 1800);
-
-            } catch (e) {
-                console.error(e);
-                this.innerHTML = '❌ Ошибка';
-                this.style.backgroundColor = '#ef4444';
-
-                setTimeout(() => {
-                    this.innerHTML = originalText;
-                    this.style.backgroundColor = '#111';
-                    this.disabled = false;
-                }, 2200);
-            }
-        });
-    });
-}
 // ====================== ЗАЩИТА ОТ СКРИНШОТОВ ======================
 let screenshotWarning = false;
 
@@ -210,7 +154,6 @@ function triggerScreenshotProtection() {
     }, 7000);
 }
 
-// Глобальные обработчики
 document.addEventListener('keydown', e => {
     if (e.key === 'PrintScreen' ||
         (e.ctrlKey && e.key.toLowerCase() === 's') ||
@@ -229,6 +172,7 @@ document.addEventListener('contextmenu', e => {
 
 // ====================== ИНИЦИАЛИЗАЦИЯ ======================
 document.addEventListener('DOMContentLoaded', () => {
+    initMobileMenu();
     initCopyButtons();
-    console.log('%cNinja Prompts — JS инициализирован', 'color: #2563eb; font-weight: 600');
+    console.log('%c[NinjaPrompt] Инициализация завершена', 'color:#22c55e');
 });
