@@ -17,54 +17,73 @@ function getCookie(name) {
     return value;
 }
 
-// ====================== АВТОМАТИЧЕСКОЕ КОПИРОВАНИЕ ======================
+
 function initCopyButtons() {
     document.querySelectorAll('.copy-btn').forEach(button => {
         button.addEventListener('click', async function() {
             const itemId = this.dataset.id;
             const originalText = this.innerHTML;
 
-            // Получаем CSRF-токен (cookie + fallback на hidden input)
-            let csrfToken = getCookie('csrftoken');
-            if (!csrfToken) {
-                const csrfInput = document.querySelector('[name=csrfmiddlewaretoken]');
-                if (csrfInput) csrfToken = csrfInput.value;
-            }
-
             this.disabled = true;
             this.innerHTML = 'Копируем...';
 
             try {
+                // Получаем CSRF
+                let csrfToken = getCookie('csrftoken');
+                if (!csrfToken) {
+                    const csrfInput = document.querySelector('[name=csrfmiddlewaretoken]');
+                    if (csrfInput) csrfToken = csrfInput.value;
+                }
+
                 const res = await fetch(`/api/copy/${itemId}/`, {
                     method: 'POST',
-                    headers: {
-                        'X-CSRFToken': csrfToken || '',
-                        'Content-Type': 'application/json'
-                    },
+                    headers: { 'X-CSRFToken': csrfToken || '' },
                     credentials: 'same-origin'
                 });
 
-                if (!res.ok) {
-                    throw new Error(`HTTP error! status: ${res.status}`);
-                }
+                if (!res.ok) throw new Error('Ошибка сервера');
 
                 const data = await res.json();
+                if (!data.success || !data.text) throw new Error('Нет текста');
 
-                if (data.success && data.text) {
-                    await navigator.clipboard.writeText(data.text);
+                // Копирование с поддержкой iPhone
+                let copied = false;
+
+                if (navigator.clipboard && window.isSecureContext) {
+                    try {
+                        await navigator.clipboard.writeText(data.text);
+                        copied = true;
+                    } catch (e) {}
+                }
+
+                if (!copied) {
+                    // Fallback для iPhone и старых браузеров
+                    const textArea = document.createElement('textarea');
+                    textArea.value = data.text;
+                    textArea.style.position = 'fixed';
+                    textArea.style.opacity = '0';
+                    document.body.appendChild(textArea);
+                    textArea.focus();
+                    textArea.select();
+                    copied = document.execCommand('copy');
+                    document.body.removeChild(textArea);
+                }
+
+                if (copied) {
                     this.innerHTML = '✅ Скопировано!';
                     this.style.backgroundColor = '#22c55e';
-
-                    setTimeout(() => {
-                        this.innerHTML = originalText;
-                        this.style.backgroundColor = '#111';
-                        this.disabled = false;
-                    }, 1800);
                 } else {
-                    throw new Error(data.error || 'Неизвестная ошибка');
+                    throw new Error('Не удалось скопировать');
                 }
+
+                setTimeout(() => {
+                    this.innerHTML = originalText;
+                    this.style.backgroundColor = '#111';
+                    this.disabled = false;
+                }, 1800);
+
             } catch (e) {
-                console.error('Ошибка копирования:', e);
+                console.error(e);
                 this.innerHTML = '❌ Ошибка';
                 this.style.backgroundColor = '#ef4444';
 
@@ -78,6 +97,85 @@ function initCopyButtons() {
     });
 }
 
+// ====================== АВТОМАТИЧЕСКОЕ КОПИРОВАНИЕ ======================
+function initCopyButtons() {
+    document.querySelectorAll('.copy-btn').forEach(button => {
+        button.addEventListener('click', async function() {
+            const itemId = this.dataset.id;
+            const originalText = this.innerHTML;
+
+            this.disabled = true;
+            this.innerHTML = 'Копируем...';
+
+            try {
+                // Получаем CSRF
+                let csrfToken = getCookie('csrftoken');
+                if (!csrfToken) {
+                    const csrfInput = document.querySelector('[name=csrfmiddlewaretoken]');
+                    if (csrfInput) csrfToken = csrfInput.value;
+                }
+
+                const res = await fetch(`/api/copy/${itemId}/`, {
+                    method: 'POST',
+                    headers: { 'X-CSRFToken': csrfToken || '' },
+                    credentials: 'same-origin'
+                });
+
+                if (!res.ok) throw new Error('Ошибка сервера');
+
+                const data = await res.json();
+                if (!data.success || !data.text) throw new Error('Нет текста');
+
+                // Копирование с поддержкой iPhone
+                let copied = false;
+
+                if (navigator.clipboard && window.isSecureContext) {
+                    try {
+                        await navigator.clipboard.writeText(data.text);
+                        copied = true;
+                    } catch (e) {}
+                }
+
+                if (!copied) {
+                    // Fallback для iPhone и старых браузеров
+                    const textArea = document.createElement('textarea');
+                    textArea.value = data.text;
+                    textArea.style.position = 'fixed';
+                    textArea.style.opacity = '0';
+                    document.body.appendChild(textArea);
+                    textArea.focus();
+                    textArea.select();
+                    copied = document.execCommand('copy');
+                    document.body.removeChild(textArea);
+                }
+
+                if (copied) {
+                    this.innerHTML = '✅ Скопировано!';
+                    this.style.backgroundColor = '#22c55e';
+                } else {
+                    throw new Error('Не удалось скопировать');
+                }
+
+                setTimeout(() => {
+                    this.innerHTML = originalText;
+                    this.style.backgroundColor = '#111';
+                    this.disabled = false;
+                }, 1800);
+
+            } catch (e) {
+                console.error(e);
+                this.innerHTML = '❌ Ошибка';
+                this.style.backgroundColor = '#ef4444';
+
+                setTimeout(() => {
+                    this.innerHTML = originalText;
+                    this.style.backgroundColor = '#111';
+                    this.disabled = false;
+                }, 2200);
+            }
+        });
+    });
+}
 // ====================== ЗАЩИТА ОТ СКРИНШОТОВ ======================
 let screenshotWarning = false;
 
