@@ -6,8 +6,10 @@ from django_ratelimit.decorators import ratelimit
 from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
 from django.db import models
+from django.core.cache import cache
+from django.views.decorators.cache import cache_page
 
-from .models import ContentItem, Group, Subcategory, Category
+from .models import ContentItem, ContentItemPhoto, Group, Subcategory, Category
 from django.core.paginator import Paginator
 from .forms import BulkImportForm
 
@@ -18,16 +20,25 @@ from django.conf import settings
 from django.utils.text import slugify
 from transliterate import translit
 
+@cache_page(60 * 2)  # 2 минуты
 def home(request):
-    from .models import ContentItem, ContentItemPhoto
+    # Динамическое количество промптов (кэшируем)
+    total_prompts = cache.get_or_set(
+        'home_total_prompts',
+        lambda: ContentItem.objects.count(),
+        300  # 5 минут
+    )
 
-    # Динамическое количество промптов
-    total_prompts = ContentItem.objects.count()
-
-    # Фото только из нужных категорий
-    photos = ContentItemPhoto.objects.filter(
-        content_item__category__slug__in=['photo-sessions', 'man-photo-sessions']
-    ).select_related('content_item').order_by('-created_at')[:15]
+    # Фото только из нужных категорий (кэшируем)
+    photos = cache.get_or_set(
+        'home_photos',
+        lambda: list(
+            ContentItemPhoto.objects.filter(
+                content_item__category__slug__in=['photo-sessions', 'man-photo-sessions']
+            ).select_related('content_item').order_by('-created_at')[:15]
+        ),
+        300
+    )
 
     photo_urls = [photo.photo.url for photo in photos if photo.photo]
 
@@ -45,7 +56,7 @@ def copy_content(request, pk):
     except ContentItem.DoesNotExist:
         return JsonResponse({'success': False, 'error': 'Запись не найдена'}, status=404)
 
-
+@cache_page(60 * 5)
 def content_list(request):
     items = ContentItem.objects.select_related(
         'category', 'subcategory__category', 'group'
@@ -66,7 +77,7 @@ def content_list(request):
         'is_admin': request.user.is_superuser,
     })
 
-
+@cache_page(60 * 5)
 def category_detail(request, slug):
     """Топ-категория"""
     top_category = get_object_or_404(Category, slug=slug)
@@ -95,7 +106,7 @@ def category_detail(request, slug):
         'is_admin': request.user.is_superuser,
     })
 
-
+@cache_page(60 * 5)
 def subcategory_detail(request, category_slug, subcategory_slug):
     """Подкатегория"""
     top_category = get_object_or_404(Category, slug=category_slug)
@@ -123,7 +134,7 @@ def subcategory_detail(request, category_slug, subcategory_slug):
         'is_admin': request.user.is_superuser,
     })
 
-
+@cache_page(60 * 5)
 def group_detail(request, slug):
     group = get_object_or_404(Group, slug=slug)
     items = ContentItem.objects.filter(group=group)\
