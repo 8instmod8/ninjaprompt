@@ -1,15 +1,30 @@
 #!/usr/bin/env bash
-set -o errexit
+set -euo pipefail
 
-echo "=== Starting build process ==="
-pip install -r requirements.txt
-python manage.py collectstatic --no-input
-echo "=== Running migrations ==="
-python manage.py migrate
+echo "========================================"
+echo "🔨 BUILD NinjaPrompt - $(date '+%Y-%m-%d %H:%M:%S')"
+echo "========================================"
 
-if [ -n "$DJANGO_SUPERUSER_USERNAME" ]; then
-    echo "=== Attempting to create superuser ==="
+echo "→ Installing Python dependencies..."
+pip install -r requirements.txt --no-cache-dir -q
+
+echo "→ Running database migrations..."
+python manage.py migrate --no-input
+
+echo "→ Collecting static files..."
+python manage.py collectstatic --no-input --clear
+
+echo "→ Pre-warming cache..."
+python manage.py shell -c "
+from content.models import ContentItem
+print('✅ Total prompts in DB:', ContentItem.objects.count())
+" || true
+
+if [ -n "${DJANGO_SUPERUSER_USERNAME:-}" ]; then
+    echo "→ Creating superuser (if not exists)..."
     python manage.py createsuperuser --noinput || true
-    echo "=== Superuser creation finished ==="
 fi
-echo "=== Build completed successfully ==="
+
+echo "========================================"
+echo "✅ BUILD COMPLETED SUCCESSFULLY"
+echo "========================================"
