@@ -24,15 +24,29 @@ function initCopyButtons() {
             const itemId = this.dataset.id;
             const originalText = this.innerHTML;
 
+            // Получаем CSRF-токен (cookie + fallback на hidden input)
+            let csrfToken = getCookie('csrftoken');
+            if (!csrfToken) {
+                const csrfInput = document.querySelector('[name=csrfmiddlewaretoken]');
+                if (csrfInput) csrfToken = csrfInput.value;
+            }
+
             this.disabled = true;
             this.innerHTML = 'Копируем...';
 
             try {
                 const res = await fetch(`/api/copy/${itemId}/`, {
                     method: 'POST',
-                    headers: { 'X-CSRFToken': getCookie('csrftoken') },
+                    headers: {
+                        'X-CSRFToken': csrfToken || '',
+                        'Content-Type': 'application/json'
+                    },
                     credentials: 'same-origin'
                 });
+
+                if (!res.ok) {
+                    throw new Error(`HTTP error! status: ${res.status}`);
+                }
 
                 const data = await res.json();
 
@@ -47,10 +61,10 @@ function initCopyButtons() {
                         this.disabled = false;
                     }, 1800);
                 } else {
-                    throw new Error(data.error || 'Ошибка');
+                    throw new Error(data.error || 'Неизвестная ошибка');
                 }
             } catch (e) {
-                console.error(e);
+                console.error('Ошибка копирования:', e);
                 this.innerHTML = '❌ Ошибка';
                 this.style.backgroundColor = '#ef4444';
 
@@ -58,7 +72,7 @@ function initCopyButtons() {
                     this.innerHTML = originalText;
                     this.style.backgroundColor = '#111';
                     this.disabled = false;
-                }, 2000);
+                }, 2200);
             }
         });
     });

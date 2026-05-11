@@ -3,6 +3,7 @@
 <html lang="ru">
 <head>
     <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" href="{% static 'images/ninp.png' %}" type="image/png">
     <link rel="apple-touch-icon" href="{% static 'images/ninp.png' %}">
 
@@ -11,71 +12,81 @@
     <!-- Основные стили -->
     <link rel="stylesheet" href="{% static 'css/main.css' %}">
 
-    <!-- Font Awesome (для иконок Telegram и Instagram) -->
+    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-
+    {% csrf_token %}
     {% block extra_css %}{% endblock %}
 </head>
 <body>
 
-    <!-- ====================== HEADER ====================== -->
     {% block header %}
-<header>
-    <a href="/" style="text-decoration: none; display: block;">
-        <img src="{% static 'images/ninja-prompt.png' %}" alt="Ninja Prompt" class="logo">
-    </a>
-
-    <!-- Основные категории (слева) -->
-    <div class="top-categories" style="flex: none;">
-        {% for top in top_categories %}
-            <a href="{% url 'content:category_detail' top.slug %}" 
-               class="top-category {% if top.slug == top_category.slug %}active{% endif %}">
-                {{ top.name }}
+    <header>
+        <div class="header-inner">
+            <!-- Логотип -->
+            <a href="/" class="logo-link">
+                <img src="{% static 'images/ninja-prompt.png' %}" alt="Ninja Prompt" class="logo">
             </a>
-        {% endfor %}
-    </div>
 
-    <!-- Правая группа: Обучение / О нас + User Panel -->
-    <div style="margin-left: auto; display: flex; align-items: center; gap: 24px;">
-        
-        <!-- Ссылки справа -->
-        <div class="top-categories">
-            <a href="/school" class="top-category">Обучение</a>
-            <a href="/about" class="top-category">О нас</a>
-        </div>
+            <!-- Категории слева -->
+            <div class="top-categories left-categories">
+                {% for top in top_categories %}
+                    <a href="{% url 'content:category_detail' top.slug %}" 
+                    class="top-category {% if top.slug == top_category.slug %}active{% endif %}">
+                        {{ top.name }}
+                    </a>
+                {% endfor %}
+            </div>
 
-        <!-- User Panel -->
-        <div class="user-panel">
-            {% if is_admin %}
-                <button class="add-btn" onclick="location.href='/admin/content/contentitem/add/'">+</button>
-            {% endif %}
+            <!-- Правая часть (Обучение/О нас + User Panel + Бургер) -->
 
-            <div class="flex items-center gap-x-3">
-                <a href="https://t.me/ninjaprompt" 
-                   target="_blank" 
-                   rel="noopener noreferrer"
-                   aria-label="Telegram">
-                    <i class="fa-brands fa-telegram social-icon"></i>
-                </a>
 
-                <span class="social-divider"></span>
+            <div class="header-right">
+                <!-- Обучение / О нас -->
+                <div class="top-categories">
+                    <a href="/school" class="top-category">Обучение</a>
+                    <a href="/about" class="top-category">О нас</a>
+                </div>
 
-                <a href="https://www.instagram.com/ninjapromt" 
-                   target="_blank" 
-                   rel="noopener noreferrer"
-                   aria-label="Instagram">
-                    <i class="fa-brands fa-instagram social-icon"></i>
-                </a>
+                <!-- User Panel с иконками -->
+                <div class="user-panel">
+                    {% if is_admin %}
+                        <button class="add-btn" onclick="location.href='/admin/content/contentitem/add/'">+</button>
+                    {% endif %}
+
+                    <div class="social-icons-row">
+                        <a href="https://t.me/ninjaprompt" target="_blank" rel="noopener noreferrer">
+                            <i class="fa-brands fa-telegram social-icon"></i>
+                        </a>
+			<span class="social-divider"></span>
+                        <a href="https://www.instagram.com/ninjapromt" target="_blank" rel="noopener noreferrer">
+                            <i class="fa-brands fa-instagram social-icon"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Бургер -->
+                <button id="mobile-menu-btn" class="burger-btn" aria-label="Меню" aria-expanded="false">
+                    <i class="fa-solid fa-bars" id="burger-icon"></i>
+                </button>
             </div>
         </div>
-    </div>
-</header>
-{% endblock %}	
-    {% block filters %}{% endblock %}
 
+        <!-- Мобильное меню (только текст, без соцсетей) -->
+        <div id="mobile-menu" class="mobile-menu">
+            <div class="mobile-menu-content">
+                {% for top in top_categories %}
+                    <a href="{% url 'content:category_detail' top.slug %}" class="mobile-nav-link">{{ top.name }}</a>
+                {% endfor %}
+                <div class="mobile-divider"></div>
+                <a href="/school" class="mobile-nav-link">Обучение</a>
+                <a href="/about" class="mobile-nav-link">О нас</a>
+            </div>
+        </div>
+    </header>
+    {% endblock %}
+    {% block filters %}{% endblock %}
     {% block content %}{% endblock %}
 
-    <!-- ====================== JAVASCRIPT ====================== -->
     <script src="{% static 'js/main.js' %}"></script>
     {% block extra_js %}{% endblock %}
 </body>

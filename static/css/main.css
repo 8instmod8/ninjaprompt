@@ -1,11 +1,8 @@
 /* =============================================
-   MAIN.CSS — Ninja Prompts
-   Версия: 2026 (ИСПРАВЛЕННАЯ)
+   MAIN.CSS — Ninja Prompts (ФИНАЛЬНАЯ ВЕРСИЯ)
    ============================================= */
 
-* {
-    box-sizing: border-box;
-}
+* { box-sizing: border-box; }
 
 body {
     font-family: 'Segoe UI', system-ui, sans-serif;
@@ -20,12 +17,28 @@ header {
     background: white;
     padding: 20px 40px;
     border-bottom: 1px solid #eee;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
     position: sticky;
     top: 0;
     z-index: 100;
+}
+
+.header-inner {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    max-width: 1760px;
+    margin: 0 auto;
+}
+
+.left-categories {
+    flex: none !important;
+    display: flex;
+}
+
+.header-right {
+    margin-left: auto !important;
+    display: flex;
+    align-items: center;
     gap: 20px;
 }
 
@@ -36,21 +49,8 @@ header {
     transition: transform 0.2s ease;
 }
 
-.logo:hover {
-    transform: scale(1.05);
-}
+.logo:hover { transform: scale(1.05); }
 
-.search {
-    width: 460px;
-    padding: 14px 20px;
-    border: 1px solid #ddd;
-    border-radius: 12px;
-    font-size: 1.05rem;
-    flex: 1;
-    max-width: 520px;
-}
-
-/* User panel */
 .user-panel {
     display: flex;
     align-items: center;
@@ -69,24 +69,19 @@ header {
     transition: background 0.2s ease;
 }
 
-.add-btn:hover {
-    background: #fcd34d;
-}
+.add-btn:hover { background: #fcd34d; }
 
-/* Разделитель между социальными иконками */
 .social-divider {
     width: 1px;
     height: 22px;
-    background-color: #d1d5db;   /* светло-серая линия */
+    background-color: #d1d5db;
     margin: 0 4px;
     align-self: center;
 }
-/* ============================================
-   SOCIAL ICONS (Font Awesome) — черные, одного размера с кнопкой +
-   ============================================ */
+
 .social-icon {
-    font-size: 1.8rem;           /* точно как у .add-btn */
-    color: #000;                 /* чёрный цвет */
+    font-size: 1.8rem;
+    color: #000;
     transition: transform 0.2s ease, color 0.2s ease;
     display: inline-flex;
     align-items: center;
@@ -95,44 +90,11 @@ header {
     height: 38px;
 }
 
-.social-icon:hover {
-    transform: scale(1.12);
-}
-
-/* Адаптивность */
-@media (max-width: 768px) {
-    .social-icon {
-        font-size: 1.6rem;
-        width: 34px;
-        height: 34px;
-    }
-}
-
-/* Telegram */
-.telegram-link {
-    display: flex;
-    align-items: center;
-    text-decoration: none;
-}
-
-.telegram-icon {
-    height: 38px;
-    width: 38px;
-    border-radius: 50%;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    object-fit: cover;
-}
-
-.telegram-link:hover .telegram-icon {
-    transform: scale(1.12);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-}
+.social-icon:hover { transform: scale(1.12); }
 
 .top-categories {
     display: flex;
     gap: 28px;
-    flex: 1;
 }
 
 .top-category {
@@ -150,19 +112,7 @@ header {
     border-bottom: 3px solid #faaf2d;
 }
 
-@media (max-width: 992px) {
-    .header-top {
-        flex-wrap: wrap;
-        gap: 15px;
-    }
-    .top-categories {
-        order: 3;
-        width: 100%;
-        justify-content: center;
-    }
-}
-
-/* ====================== FILTER CHIPS ====================== */
+/* ====================== FILTERS ====================== */
 .filters {
     display: flex;
     gap: 10px;
@@ -185,10 +135,7 @@ header {
     transition: all 0.2s ease;
 }
 
-.filter-chip:hover {
-    background: #f1f1f1;
-}
-
+.filter-chip:hover { background: #f1f1f1; }
 .filter-chip.active {
     background: #111;
     color: white;
@@ -204,8 +151,17 @@ header {
     padding: 40px 40px 80px;
 }
 
-@media (max-width: 899px) {
-    .grid { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+/* СТРОГО 1 КАРТОЧКА В РЯД НА МОБИЛЬНОМ */
+@media (max-width: 768px) {
+    .grid {
+        grid-template-columns: 1fr !important;
+        gap: 20px;
+        padding: 20px 16px 60px;
+    }
+}
+
+@media (min-width: 769px) and (max-width: 899px) {
+    .grid { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
 }
 
 @media (min-width: 900px) and (max-width: 1249px) {
@@ -226,7 +182,7 @@ header {
     transition: transform 0.2s ease, box-shadow 0.2s ease;
     display: flex;
     flex-direction: column;
-    height: 100%;                    /* ← важно */
+    height: 100%;
 }
 
 .card:hover {
@@ -234,25 +190,94 @@ header {
     box-shadow: 0 12px 30px rgba(0, 0, 0, 0.1);
 }
 
-/* ====================== PHOTO CONTAINER ====================== */
+/* ====================== PHOTO CONTAINER (ВЕРТИКАЛЬНЫЕ!) ====================== */
 .photo-container {
     position: relative;
     width: 100%;
-    height: 480px;
-    aspect-ratio: 4 / 5;
+    height: auto !important;
+    aspect-ratio: 4 / 5 !important;
+    max-height: 480px;
     background: #f8f9fa;
     overflow: hidden;
     border-radius: 20px;
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.06);
-    flex-shrink: 0;                   /* ← не сжимать */
+    flex-shrink: 0;
     display: flex;
     align-items: center;
     justify-content: center;
 }
 
-/* ====================== МНОЖЕСТВЕННЫЕ ФОТО ====================== */
+/* ====================== ВНУТРЕННИЕ ЭЛЕМЕНТЫ КАРТОЧКИ ====================== */
+/* ====================== CATEGORY BADGE ====================== */
+.category-badge {
+    position: absolute;
+    top: 16px;
+    left: 16px;
+    background: rgba(255, 255, 255, 0.95);
+    color: #333;
+    font-size: 0.82rem;
+    font-weight: 600;
+    padding: 6px 18px;
+    border-radius: 9999px;
+    z-index: 30;
+    backdrop-filter: blur(6px);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
 
-/* Одиночное фото */
+.card-body {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    flex: 1;
+}
+
+.tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.group-name-badge {
+    display: inline-block;
+    background: #f1f1f1;
+    color: #2C2C2C;
+    padding: 7px 18px;
+    border-radius: 9999px;
+    font-size: 0.88rem;
+    font-weight: 600;
+    margin-bottom: 12px;
+    text-decoration: none;
+    transition: all 0.25s ease;
+    border: 1px solid #e0e0e0;
+}
+
+.group-name-badge:hover {
+    background: #2C2C2C;
+    color: #E5E5E5;
+    border-color: #2C2C2C;
+}
+
+.copy-btn {
+    margin-top: auto;
+    width: 100%;
+    background: #111;
+    color: white;
+    border: none;
+    padding: 14px 0;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.copy-btn:hover {
+    background: #000;
+    transform: translateY(-1px);
+}
+
+/* ====================== MAIN PHOTO ====================== */
 .main-photo {
     width: 100%;
     height: 100%;
@@ -279,26 +304,6 @@ header {
     display: block;
 }
 
-/* ====================== UGC КАРУСЕЛЬ ====================== */
-.ugc-swiper {
-    width: 100% !important;
-    height: 100% !important;
-    border-radius: 20px;
-}
-
-.ugc-swiper .swiper-slide {
-    width: 100%;
-    height: 100%;
-}
-
-.ugc-swiper .swiper-slide img {
-    width: 100% !important;
-    height: 100% !important;
-    object-fit: cover;
-    display: block;
-}
-
-/* Стрелки — прозрачные + лёгкая тень */
 .ugc-swiper .swiper-button-prev,
 .ugc-swiper .swiper-button-next {
     color: white;
@@ -309,116 +314,97 @@ header {
     transform: translateY(-50%);
     border-radius: 0;
     transition: all 0.2s ease;
-    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
 }
 
 .ugc-swiper .swiper-button-prev:hover,
 .ugc-swiper .swiper-button-next:hover {
-    color: #ddd;
-    text-shadow: 0 2px 14px rgba(0, 0, 0, 0.9);
+    color: #faaf2d;
 }
 
-.ugc-swiper .swiper-button-prev::after,
-.ugc-swiper .swiper-button-next::after {
-    font-size: 26px;
-    font-weight: 700;
-}
-
-/* Пагинация */
-.ugc-swiper .swiper-pagination-bullet {
+/* ====================== МОБИЛЬНОЕ МЕНЮ ====================== */
+.mobile-menu {
+    display: none;
     background: white;
-    opacity: 0.7;
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
-}
-.ugc-swiper .swiper-pagination-bullet {
-    background: white;
-    opacity: 0.7;
+    border-top: 1px solid #eee;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
 }
 
-.ugc-swiper .swiper-pagination-bullet-active {
-    background: #faaf2d;
-    opacity: 1;
-}
-
-/* Шторка (Before/After) */
-.comparison-slider,
-.before-after-wrapper {
-    width: 100% !important;
-    height: 100% !important;
-    position: relative;
-    overflow: hidden;
-    flex: 1;
-}
-
-.comparison-slider img,
-.beforeAfter img {
-    width: 100% !important;
-    height: 100% !important;
-    object-fit: cover !important;
+.mobile-menu.open {
     display: block;
 }
 
-/* ====================== CARD BODY ====================== */
-.card-body {
-    padding: 18px 20px 20px;
-    flex-grow: 1;
+.mobile-menu-content {
+    max-width: 1760px;
+    margin: 0 auto;
+    padding: 16px 40px 24px;
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
+    gap: 4px;
 }
 
-.group-name-badge {
-    display: inline-block;
-    background: #f1f1f1;
-    color: #2C2C2C;
-    padding: 7px 18px;
-    border-radius: 9999px;
-    font-size: 0.88rem;
+.mobile-nav-link {
+    display: block;
+    padding: 14px 20px;
     font-weight: 600;
-    margin-bottom: 12px;
+    color: #333;
     text-decoration: none;
-    transition: all 0.25s ease;
-    border: 1px solid #e0e0e0;
-}
-
-.group-name-badge:hover {
-    background: #2C2C2C;
-    color: #E5E5E5;
-    border-color: #2C2C2C;
-}
-
-.copy-btn {
-    width: 100%;
-    padding: 16px;
-    background: #111;
-    color: white;
-    border: none;
     border-radius: 12px;
-    font-size: 1.05rem;
-    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+.mobile-nav-link:hover,
+.mobile-nav-link.active {
+    background: #f8f9fa;
+    color: #000;
+}
+
+.mobile-divider {
+    height: 1px;
+    background: #eee;
+    margin: 8px 0;
+}
+
+/* ====================== БУРГЕР ====================== */
+.burger-btn {
+    display: none;
+    width: 44px;
+    height: 44px;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    color: #111;
+    font-size: 1.5rem;
     cursor: pointer;
+    border-radius: 12px;
     transition: background 0.2s ease;
 }
 
-.copy-btn:hover {
-    background: #000;
+.burger-btn:hover {
+    background: #f1f1f1;
 }
 
-/* ====================== CATEGORY BADGE ====================== */
-.category-badge {
-    position: absolute;
-    top: 16px;
-    left: 16px;
-    background: rgba(255, 255, 255, 0.95);
-    color: #333;
-    font-size: 0.82rem;
-    font-weight: 600;
-    padding: 6px 18px;
-    border-radius: 9999px;
-    z-index: 30;
-    backdrop-filter: blur(6px);
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+/* ====================== СКРЫТИЕ ДЕСКТОПНЫХ ЭЛЕМЕНТОВ НА МОБИЛЬНОМ ====================== */
+@media (max-width: 768px) {
+    .left-categories,
+    .header-right .top-categories {
+        display: none !important;
+    }
+    
+    .burger-btn {
+        display: flex !important;
+    }
+    
+    .header-inner {
+        padding: 16px 20px;
+    }
+    
+    .logo {
+        height: 48px;
+    }
 }
+
 
 /* ====================== SCREENSHOT PROTECTION ====================== */
 .screenshot-detected .card img {
@@ -450,35 +436,107 @@ header {
     transform: translateY(-1px);
 }
 
-/* ====================== UTILS ====================== */
-h1 {
-    font-size: 2.8rem;
-    margin: 0 0 12px 0;
-}
 
-p {
-    color: #666;
-}
+/* === ФИНАЛЬНЫЕ ПРАВИЛА (добавь в конец файла) === */
 
-/* ====================== MOBILE ====================== */
+/* Скрываем десктопное меню на мобильных */
 @media (max-width: 768px) {
-    header {
-        padding: 16px 20px;
-        flex-wrap: wrap;
+    .left-categories,
+    .header-right .top-categories {
+        display: none !important;
     }
     
-    .search {
-        width: 100%;
-        order: 3;
-        margin-top: 12px;
+    .burger-btn {
+        display: flex !important;
     }
-    
-    .telegram-icon {
-        height: 34px;
-        width: 34px;
+}
+
+/* Строго вертикальные карточки */
+.photo-container {
+    height: auto !important;
+    aspect-ratio: 4 / 5 !important;
+}
+
+@media (max-width: 768px) {
+    .grid {
+        grid-template-columns: 1fr !important;
     }
     
     .photo-container {
-        aspect-ratio: 3 / 4;
+        max-height: 420px !important;
+    }
+}
+
+/* === ФИНАЛЬНЫЕ ПРАВИЛА (добавь в конец файла) === */
+
+/* Скрываем десктопное меню на мобильных */
+@media (max-width: 768px) {
+    .left-categories,
+    .header-right .top-categories {
+        display: none !important;
+    }
+    
+    .burger-btn {
+        display: flex !important;
+    }
+}
+
+/* Строго вертикальные карточки */
+.photo-container {
+    height: auto !important;
+    aspect-ratio: 4 / 5 !important;
+}
+
+@media (max-width: 768px) {
+    .grid {
+        grid-template-columns: 1fr !important;
+    }
+    
+    .photo-container {
+        max-height: 420px !important;
+    }
+}
+/* === Исправление высоты хедера и иконок на мобильном === */
+
+/* Соцсети в ряд */
+.social-icons-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Уменьшаем высоту хедера на телефоне */
+@media (max-width: 768px) {
+    header {
+        padding: 12px 16px !important;
+    }
+
+    .logo {
+        height: 58px !important;
+    }
+
+    .header-right {
+        gap: 12px !important;
+    }
+
+    .mobile-header-actions {
+        display: flex;
+        align-items: center;
+        gap: 20px;                    /* как gap-x-5 в home.html */
+    }
+
+    .social-icon {
+        font-size: 22px !important;   /* точно как text-[22px] */
+        width: auto !important;
+        height: auto !important;
+    }
+
+    .burger-btn {
+        width: 40px !important;       /* w-10 */
+        height: 40px !important;      /* h-10 */
+        font-size: 20px !important;   /* text-xl */
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
 }
