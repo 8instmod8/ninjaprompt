@@ -15,24 +15,18 @@
         body { font-family: 'Inter', system_ui, sans-serif; }
         .font-display { font-family: 'Space Grotesk', 'Inter', system_ui, sans-serif; }
         .ninja-text { font-weight: 900; letter-spacing: -0.065em; line-height: 0.88; }
-        
-        .device-frame {
-            box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.45),
-                        0 0 0 1px rgb(63 63 70 / 0.35),
-                        inset 0 1px 0 rgb(255 255 255 / 0.08);
-        }
     </style>
 </head>
 <body class="bg-zinc-950 text-white">
-    	<!-- ========== ХЕДЕР (подогнан под стандартный стиль проекта) ========== -->
-	<nav class="sticky top-0 z-50 bg-zinc-950/95 backdrop-blur-lg border-b border-zinc-800">
+    <!-- ========== ХЕДЕР ========== -->
+    <nav class="sticky top-0 z-50 bg-zinc-950/95 backdrop-blur-lg border-b border-zinc-800">
         <div class="max-w-screen-2xl mx-auto px-8">
             <div class="flex items-center justify-between" style="padding: 20px 0;">
                 <!-- Логотип -->
                 <div class="flex items-center">
                     <img src="{% static 'images/ninja-prompt.png' %}"
-                        alt="Ninja Prompt"
-                        class="h-[58px] w-auto filter brightness-0 invert">
+                         alt="Ninja Prompt"
+                         class="h-[58px] w-auto filter brightness-0 invert">
                 </div>
 
                 <!-- Десктоп-меню -->
@@ -42,18 +36,17 @@
                     <a href="/about" class="text-white hover:text-zinc-300 transition-colors">О нас</a>
                 </div>
 
-                <!-- Соцсети + бургер (мобильный) -->
+                <!-- Соцсети + бургер -->
                 <div class="flex items-center gap-x-5">
                     <a href="https://t.me/ninjaprompt" target="_blank"
-                    class="text-white hover:text-zinc-400 transition-colors">
+                       class="text-white hover:text-zinc-400 transition-colors">
                         <i class="fa-brands fa-telegram text-[22px]"></i>
                     </a>
                     <a href="https://instagram.com/ninjapromt" target="_blank"
-                    class="text-white hover:text-zinc-400 transition-colors">
+                       class="text-white hover:text-zinc-400 transition-colors">
                         <i class="fa-brands fa-instagram text-[22px]"></i>
                     </a>
 
-                    <!-- Бургер-кнопка -->
                     <button id="mobile-menu-btn"
                             class="md:hidden flex items-center justify-center w-10 h-10 text-white hover:text-zinc-300 transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 rounded-xl"
                             aria-label="Открыть меню навигации"
@@ -65,7 +58,7 @@
 
             <!-- Мобильное меню -->
             <div id="mobile-menu"
-                class="hidden md:hidden border-t border-zinc-800 bg-zinc-950/95 backdrop-blur-lg">
+                 class="hidden md:hidden border-t border-zinc-800 bg-zinc-950/95 backdrop-blur-lg">
                 <div class="px-8 py-6 flex flex-col gap-y-1 text-[15px] font-medium">
                     <a href="/prompts" class="py-3 text-white hover:text-red-400 transition-colors">Готовые промпты</a>
                     <a href="/school" class="py-3 text-white hover:text-red-400 transition-colors">Обучение</a>
@@ -74,6 +67,7 @@
             </div>
         </div>
     </nav>
+
     <!-- ========== HERO ========== -->
     <section class="relative min-h-[100dvh] flex items-center pt-6 pb-16 overflow-hidden">
         
@@ -87,34 +81,45 @@
         <div class="max-w-screen-2xl mx-auto px-6 md:px-12 relative z-10">
             <div class="grid md:grid-cols-2 gap-12 lg:gap-20 items-center">
                 
-		<!-- ========== БОЛЬШАЯ СЕКЦИЯ (50% экрана) ========== -->		<div class="relative flex justify-center md:justify-start w-full max-w-[620px]">
-    			<div class="relative w-full bg-zinc-900 border border-zinc-700 rounded-[3.5rem] p-4 shadow-2xl">
-        
-        		<!-- Карусель фотографий (портрет) -->
-        		<div class="relative w-full aspect-[9/14] rounded-[2.75rem] overflow-hidden bg-black" id="photo-carousel">
-            			{% for url in photo_urls %}
-                			<img src="{{ url }}" 
-                     			class="absolute inset-0 w-full h-full object-cover transition-opacity duration-700"
-                     			style="opacity: {% if forloop.first %}1{% else %}0{% endif %};"
-                     			data-index="{{ forloop.counter0 }}">
-            			{% empty %}
-                		<div class="absolute inset-0 bg-gradient-to-br from-red-950 to-zinc-950 flex items-center justify-center">
-                    			<span class="text-white/50">Нет фото в БД</span>
-                		</div>
-            			{% endfor %}
-		        </div>
+                <!-- ========== ЛЕВАЯ КОЛОНКА — ТЕЛЕФОН (исправленный размер) ========== -->
+                <div class="flex justify-center md:justify-start">
+                    <div class="relative w-full max-w-[620px] lg:max-w-[680px] 
+                                bg-zinc-900 border border-zinc-700 rounded-[3.5rem] p-4 shadow-2xl">
+                        
+                        <!-- Карусель фотографий -->
+                        <div class="relative w-full aspect-[9/14] rounded-[2.75rem] overflow-hidden bg-black" id="photo-carousel">
+                            {% for url in photo_urls %}
+                                <img src="{{ url }}" 
+                                     class="absolute inset-0 w-full h-full object-cover transition-opacity duration-700"
+                                     style="opacity: {% if forloop.first %}1{% else %}0{% endif %};"
+                                     data-index="{{ forloop.counter0 }}">
+                            {% empty %}
+                                <div class="absolute inset-0 bg-gradient-to-br from-red-950 to-zinc-950 flex items-center justify-center">
+                                    <span class="text-white/50">Нет фото в БД</span>
+                                </div>
+                            {% endfor %}
+                        </div>
 
-        		<!-- Динамический бейдж -->
-			<div class="absolute bottom-8 left-8 bg-zinc-950/90 backdrop-blur-md border border-zinc-700 rounded-2xl px-6 py-4 flex items-center gap-x-4 shadow-xl">
-            			<div class="text-red-500 text-[52px] font-black tracking-tighter">{{ total_prompts }}+</div>
-            				<div class="text-sm leading-tight text-zinc-400">
-                				Авторских<br>
-                				<span class="font-semibold text-white">промтов</span>
-            				</div>
-        			</div>
-    			</div>
-		</div>
-                <!-- Текст + CTA -->
+                        <!-- ДИНАМИЧЕСКИЙ КЛИКАБЕЛЬНЫЙ БЕЙДЖ -->
+                        <a href="/prompts"
+                           class="absolute bottom-8 left-8 bg-zinc-950/90 backdrop-blur-md border border-zinc-700 rounded-2xl px-6 py-4 flex items-center gap-x-4 shadow-xl 
+                                  hover:bg-zinc-900 hover:border-zinc-600 hover:scale-[1.02] transition-all duration-200 cursor-pointer group
+                                  focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 focus:ring-offset-zinc-950"
+                           aria-label="Перейти к каталогу готовых промптов — сейчас доступно {{ total_prompts }} авторских промптов">
+                            
+                            <div class="text-red-500 text-[52px] font-black tracking-tighter group-hover:text-red-400 transition-colors">
+                                {{ total_prompts }}+
+                            </div>
+                            
+                            <div class="text-sm leading-tight text-zinc-400 group-hover:text-zinc-300 transition-colors">
+                                Авторских<br>
+                                <span class="font-semibold text-white group-hover:text-zinc-100">промтов</span>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- ========== ПРАВАЯ КОЛОНКА — ТЕКСТ + CTA ========== -->
                 <div class="max-w-[600px]">
                     <h1 class="font-display text-[58px] md:text-[74px] lg:text-[80px] leading-[0.95] font-extrabold tracking-[-3.4px]">
                         Будущее уже<br>
@@ -136,74 +141,85 @@
             </div>
         </div>
     </section>
-<script>
-    function initPhotoCarousel() {
-        const carousel = document.getElementById('photo-carousel');
-        if (!carousel) return;
 
-        const images = carousel.querySelectorAll('img');
-        if (images.length <= 1) return;
+    <script>
+        function initPhotoCarousel() {
+            const carousel = document.getElementById('photo-carousel');
+            if (!carousel) return;
 
-        let current = 0;
+            const images = carousel.querySelectorAll('img');
+            if (images.length <= 1) return;
 
-        setInterval(() => {
-            images[current].style.opacity = '0';
-            current = (current + 1) % images.length;
-            images[current].style.opacity = '1';
-        }, 2800);
-    }
+            let current = 0;
 
-    function initMobileMenu() {
-        const btn = document.getElementById('mobile-menu-btn');
-        const menu = document.getElementById('mobile-menu');
-        const icon = document.getElementById('burger-icon');
-
-        if (!btn || !menu || !icon) return;
-
-        let isOpen = false;
-
-        btn.addEventListener('click', () => {
-            isOpen = !isOpen;
-            btn.setAttribute('aria-expanded', isOpen);
-
-            if (isOpen) {
-                menu.classList.remove('hidden');
-                icon.classList.remove('fa-bars');
-                icon.classList.add('fa-xmark');
-            } else {
-                menu.classList.add('hidden');
-                icon.classList.remove('fa-xmark');
-                icon.classList.add('fa-bars');
-            }
-        });
-
-        // Закрываем меню при клике на любую ссылку
-        menu.querySelectorAll('a').forEach(link => {
-            link.addEventListener('click', () => {
-                isOpen = false;
-                menu.classList.add('hidden');
-                icon.classList.remove('fa-xmark');
-                icon.classList.add('fa-bars');
-                btn.setAttribute('aria-expanded', 'false');
+            // === УЛУЧШЕНИЕ ДЛЯ iPHONE ===
+            images.forEach(img => {
+                img.style.willChange = 'opacity';
+                img.style.transform = 'translateZ(0)';           // принудительная hardware acceleration
+                img.style.backfaceVisibility = 'hidden';         // помогает на iOS
             });
-        });
 
-        // Закрываем меню при переходе на десктоп (resize)
-        window.addEventListener('resize', () => {
-            if (window.innerWidth >= 768 && isOpen) {
-                isOpen = false;
-                menu.classList.add('hidden');
-                icon.classList.remove('fa-xmark');
-                icon.classList.add('fa-bars');
-                btn.setAttribute('aria-expanded', 'false');
-            }
-        });
-    }
+            setInterval(() => {
+                images[current].style.opacity = '0';
+                
+                current = (current + 1) % images.length;
+                
+                // Небольшая задержка для более плавного кроссфейда
+                setTimeout(() => {
+                    images[current].style.opacity = '1';
+                }, 50);
+            }, 2800);
+        }
 
-    window.onload = function() {
-        initPhotoCarousel();
-        initMobileMenu();
-    }
-</script>
+        function initMobileMenu() {
+            const btn = document.getElementById('mobile-menu-btn');
+            const menu = document.getElementById('mobile-menu');
+            const icon = document.getElementById('burger-icon');
+
+            if (!btn || !menu || !icon) return;
+
+            let isOpen = false;
+
+            btn.addEventListener('click', () => {
+                isOpen = !isOpen;
+                btn.setAttribute('aria-expanded', isOpen);
+
+                if (isOpen) {
+                    menu.classList.remove('hidden');
+                    icon.classList.remove('fa-bars');
+                    icon.classList.add('fa-xmark');
+                } else {
+                    menu.classList.add('hidden');
+                    icon.classList.remove('fa-xmark');
+                    icon.classList.add('fa-bars');
+                }
+            });
+
+            menu.querySelectorAll('a').forEach(link => {
+                link.addEventListener('click', () => {
+                    isOpen = false;
+                    menu.classList.add('hidden');
+                    icon.classList.remove('fa-xmark');
+                    icon.classList.add('fa-bars');
+                    btn.setAttribute('aria-expanded', 'false');
+                });
+            });
+
+            window.addEventListener('resize', () => {
+                if (window.innerWidth >= 768 && isOpen) {
+                    isOpen = false;
+                    menu.classList.add('hidden');
+                    icon.classList.remove('fa-xmark');
+                    icon.classList.add('fa-bars');
+                    btn.setAttribute('aria-expanded', 'false');
+                }
+            });
+        }
+
+        window.onload = function() {
+            initPhotoCarousel();
+            initMobileMenu();
+        }
+    </script>
 </body>
 </html>

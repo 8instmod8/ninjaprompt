@@ -43,7 +43,7 @@ function initMobileMenu() {
     });
 }
 
-// ====================== КОПИРОВАНИЕ ПРОМПТОВ ======================
+// ====================== КОПИРОВАНИЕ ПРОМПТОВ (финальная версия 2026, без data-text) ======================
 function initCopyButtons() {
     document.querySelectorAll('.copy-btn').forEach(button => {
         button.addEventListener('click', async function() {
@@ -53,38 +53,46 @@ function initCopyButtons() {
             this.disabled = true;
             this.innerHTML = 'Копируем...';
 
+            let success = false;
+
             try {
-                let csrfToken = getCookie('csrftoken');
-                if (!csrfToken) {
-                    const input = document.querySelector('[name=csrfmiddlewaretoken]');
-                    if (input) csrfToken = input.value;
-                }
+                const csrfToken = getCookie('csrftoken') || 
+                    document.querySelector('[name=csrfmiddlewaretoken]')?.value || '';
 
-                const res = await fetch(`/api/copy/${itemId}/`, {
-                    method: 'POST',
-                    headers: { 'X-CSRFToken': csrfToken || '' },
-                    credentials: 'same-origin'
-                });
+                // === ГЛАВНЫЙ ФИКС ДЛЯ iOS SAFARI ===
+                if (navigator.clipboard && navigator.clipboard.write) {
+                    await navigator.clipboard.write([
+                        new ClipboardItem({
+                            "text/plain": fetch(`/api/copy/${itemId}/`, {
+                                method: 'POST',
+                                headers: { 'X-CSRFToken': csrfToken },
+                                credentials: 'same-origin'
+                            })
+                            .then(res => {
+                                if (!res.ok) throw new Error('Server error');
+                                return res.json();
+                            })
+                            .then(data => {
+                                if (!data.success || !data.text) throw new Error('No text');
+                                return new Blob([data.text], { type: "text/plain" });
+                            })
+                        })
+                    ]);
+                    success = true;
+                } 
+                else {
+                    // Fallback для совсем старых браузеров (редко в 2026)
+                    const res = await fetch(`/api/copy/${itemId}/`, {
+                        method: 'POST',
+                        headers: { 'X-CSRFToken': csrfToken },
+                        credentials: 'same-origin'
+                    });
+                    const data = await res.json();
+                    if (!data.success || !data.text) throw new Error('No text');
 
-                if (!res.ok) throw new Error('Server error');
-
-                const data = await res.json();
-                if (!data.success || !data.text) throw new Error('No text');
-
-                let success = false;
-
-                if (navigator.clipboard && window.isSecureContext) {
-                    try {
-                        await navigator.clipboard.writeText(data.text);
-                        success = true;
-                    } catch (e) {}
-                }
-
-                if (!success) {
                     const ta = document.createElement('textarea');
                     ta.value = data.text;
-                    ta.style.position = 'fixed';
-                    ta.style.opacity = '0';
+                    ta.style.cssText = 'position:fixed;top:-9999px;left:-9999px;opacity:0';
                     document.body.appendChild(ta);
                     ta.focus();
                     ta.select();
@@ -92,30 +100,23 @@ function initCopyButtons() {
                     document.body.removeChild(ta);
                 }
 
-                if (success) {
-                    this.innerHTML = '✅ Скопировано!';
-                    this.style.backgroundColor = '#22c55e';
-                } else {
-                    throw new Error('Copy failed');
-                }
-
-                setTimeout(() => {
-                    this.innerHTML = originalText;
-                    this.style.backgroundColor = '#111';
-                    this.disabled = false;
-                }, 1800);
-
             } catch (e) {
-                console.error(e);
-                this.innerHTML = '❌ Ошибка';
-                this.style.backgroundColor = '#ef4444';
-
-                setTimeout(() => {
-                    this.innerHTML = originalText;
-                    this.style.backgroundColor = '#111';
-                    this.disabled = false;
-                }, 2200);
+                console.error('[NinjaPrompt] Copy error:', e);
             }
+
+            if (success) {
+                this.innerHTML = 'Скопировано!';
+                this.style.backgroundColor = '#22c55e';
+            } else {
+                this.innerHTML = 'Ошибка';
+                this.style.backgroundColor = '#ef4444';
+            }
+
+            setTimeout(() => {
+                this.innerHTML = originalText;
+                this.style.backgroundColor = '#111';
+                this.disabled = false;
+            }, success ? 1600 : 2400);
         });
     });
 }
