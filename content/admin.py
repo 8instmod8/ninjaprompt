@@ -3,8 +3,13 @@ from django.contrib import admin
 from django import forms
 from django.urls import path
 from django.utils.safestring import mark_safe
+from django.core.exceptions import ValidationError
+from django.core.cache import cache
 
-from .models import Category, Subcategory, Group, ContentItem, ContentItemPhoto
+from .models import (
+    Category, Subcategory, Group, ContentItem, 
+    ContentItemPhoto, DisplayType
+)
 from .views import bulk_import_view
 
 
@@ -18,30 +23,32 @@ class ContentItemPhotoInline(admin.TabularInline):
 
     def photo_preview(self, obj=None):
         if obj and obj.photo:
-            return mark_safe(f'<img src="{obj.photo.url}" style="max-height: 60px; border-radius: 4px;">')
+            return mark_safe(f'<img src="{obj.photo.url}" style="max-height: 80px; max-width: 120px;">')
         return "—"
     photo_preview.short_description = 'Превью'
 
-
 class ContentItemAdminForm(forms.ModelForm):
+    """Форма с надёжной сменой категории"""
     class Meta:
         model = ContentItem
-        fields = ['category', 'subcategory', 'group', 'full_text']
+        fields = ['category', 'subcategory', 'group', 'display_type', 'full_text']
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         self.fields['category'].queryset = Category.objects.order_by('order', 'name')
 
+        # Определяем категорию из POST (если пользователь меняет) или из instance
         category_id = None
-        if self.instance.pk and self.instance.category:
-            category_id = self.instance.category.id
-        elif self.data and self.data.get('category'):
+        if self.data and self.data.get('category'):
             try:
                 category_id = int(self.data.get('category'))
             except (ValueError, TypeError):
                 pass
+        elif self.instance.pk and self.instance.category:
+            category_id = self.instance.category.id
 
+        # Фильтруем подкатегории под текущую категорию
         if category_id:
             self.fields['subcategory'].queryset = Subcategory.objects.filter(
                 category_id=category_id
@@ -51,32 +58,64 @@ class ContentItemAdminForm(forms.ModelForm):
                 'category__order', 'category__name', 'name'
             )
 
+        # Если категория изменилась — очищаем подкатегорию (чтобы не было конфликта)
+        if self.instance.pk and category_id:
+            old_category_id = self.instance.category_id if self.instance.category_id else None
+            if old_category_id and old_category_id != category_id:
+                # Категория реально изменилась — сбрасываем подкатегорию
+                self.initial['subcategory'] = None
+                if self.data:
+                    self.data = self.data.copy()
+                    self.data['subcategory'] = ''
+
+    def clean(self):
+        cleaned_data = super().clean()
+        category = cleaned_data.get('category')
+        subcategory = cleaned_data.get('subcategory')
+
+        # Если выбрана подкатегория — принудительно ставим её родительскую категорию
+        if subcategory:
+            cleaned_data['category'] = subcategory.category
+
+        # Проверка целостности
+        if subcategory and category and subcategory.category_id != category.id:
+            raise ValidationError({
+                'subcategory': 'Подкатегория не принадлежит выбранной категории.'
+            })
+
+        return cleaned_data
 
 @admin.register(ContentItem)
 class ContentItemAdmin(admin.ModelAdmin):
     form = ContentItemAdminForm
     inlines = [ContentItemPhotoInline]
 
-    list_display = ('id', 'effective_category', 'subcategory', 'group', 
-                    'created_at', 'photo_preview_list', 'photo_count')
-    list_display_links = ('id', 'effective_category')
-    list_filter = ('category', 'subcategory__category', 'group', 'created_at')
+    list_display = (
+        'id', 'effective_category_safe', 'subcategory', 'group',
+        'display_type', 'created_at', 'photo_preview_safe', 'photo_count'
+    )
+    list_display_links = ('id', 'effective_category_safe')
+    list_filter = ('display_type', 'category', 'subcategory__category', 'group', 'created_at')
     search_fields = ('full_text', 'category__name', 'subcategory__name', 'group__name')
     ordering = ('-created_at',)
 
-    readonly_fields = ('created_at', 'photo_preview_admin')
+    readonly_fields = ('created_at',)
 
     fieldsets = (
         ('Привязка к категории', {
-            'fields': ('category', 'subcategory'),
-            'description': 'Выберите категорию — подкатегории отфильтруются'
+            'fields': ('category', 'subcategory', 'group'), 
         }),
+	('Отображение фото', {
+      	    'fields': ('display_type',),
+    	    'description': '''
+        	<strong>Правила количества фото:</strong><br>
+        	• Одиночное — ровно 1 фото<br>
+        	• Карусель — минимум 2 фото<br>
+        	• Шторка — ровно 2 фото
+    		''',
+	}),
         ('Промпт', {
             'fields': ('full_text',),
-        }),
-        ('Группа (опционально)', {
-            'fields': ('group',),
-            'classes': ('collapse',),
         }),
         ('Метаданные', {
             'fields': ('created_at',),
@@ -91,32 +130,42 @@ class ContentItemAdmin(admin.ModelAdmin):
         ]
         return custom_urls + urls
 
+    # Безопасные методы для list_display
+    def effective_category_safe(self, obj):
+        try:
+            return obj.effective_category
+        except:
+            return "—"
+    effective_category_safe.short_description = 'Категория'
+    effective_category_safe.admin_order_field = 'category'
+
+    def photo_preview_safe(self, obj):
+        try:
+            first = obj.photos.first()
+            photo = first.photo if first else getattr(obj, 'photo', None)
+            if photo:
+                return mark_safe(f'<img src="{photo.url}" style="max-height: 60px;">')
+        except:
+            pass
+        return "—"
+    photo_preview_safe.short_description = 'Фото'
+
     def photo_count(self, obj):
-        return obj.photos.count() or 0
+        try:
+            return obj.photos.count()
+        except:
+            return 0
     photo_count.short_description = 'Кол-во фото'
 
-    def photo_preview_list(self, obj):
-        first = obj.photos.first()
-        photo = first.photo if first else getattr(obj, 'photo', None)
-        if photo:
-            return mark_safe(f'<img src="{photo.url}" style="max-height: 60px; border-radius: 6px;">')
-        return "—"
-    photo_preview_list.short_description = 'Фото'
+    def save_model(self, request, obj, form, change):
+        """Сохраняем карточку + сбрасываем кэш"""
+        super().save_model(request, obj, form, change)
+        cache.clear()
 
-    def photo_preview_admin(self, obj=None):
-        first = obj.photos.first() if obj else None
-        photo = first.photo if first else getattr(obj, 'photo', None)
-        if photo:
-            return mark_safe(f'<img src="{photo.url}" style="max-height: 300px; border-radius: 8px;">')
-        return "Нет фото"
-    photo_preview_admin.short_description = 'Превью'
-    
-    actions = ['bulk_import_action']
-
-    def bulk_import_action(self, request, queryset):
-        from django.shortcuts import redirect
-        return redirect('admin:content_contentitem_bulk_import')
-    bulk_import_action.short_description = "📦 Массовый импорт"
+    def save_related(self, request, form, formsets, change):
+        """Сохраняем inline-фото + валидация + сбрасываем кэш"""
+        super().save_related(request, form, formsets, change)
+        cache.clear()
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
@@ -124,27 +173,13 @@ class CategoryAdmin(admin.ModelAdmin):
     list_editable = ('display_type', 'order')
     prepopulated_fields = {'slug': ('name',)}
     ordering = ('order', 'name')
-    search_fields = ('name',)
 
-    fieldsets = (
-        ('Основная информация', {
-            'fields': ('name', 'slug', 'description')
-        }),
-        ('Отображение', {
-            'fields': ('display_type',),
-            'description': 'Как будут отображаться карточки этой категории'
-        }),
-        ('Сортировка', {
-            'fields': ('order',),
-        }),
-    )
 
 @admin.register(Subcategory)
 class SubcategoryAdmin(admin.ModelAdmin):
     list_display = ('name', 'slug', 'category')
     list_filter = ('category',)
     prepopulated_fields = {'slug': ('name',)}
-    search_fields = ('name',)
 
 
 @admin.register(Group)
@@ -152,4 +187,3 @@ class GroupAdmin(admin.ModelAdmin):
     list_display = ('name', 'slug')
     prepopulated_fields = {'slug': ('name',)}
     filter_horizontal = ('subcategories',)
-    search_fields = ('name',)

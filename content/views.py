@@ -156,7 +156,7 @@ def group_detail(request, slug):
 # ====================== Bulk Import ======================
 @staff_member_required
 def bulk_import_view(request):
-    """Массовый импорт — поддержка нескольких фото через запятую"""
+    """Массовый импорт с поддержкой display_type"""
     if request.method == 'POST':
         form = BulkImportForm(request.POST, request.FILES)
         if form.is_valid():
@@ -168,7 +168,7 @@ def bulk_import_view(request):
                 os.makedirs(extract_path, exist_ok=True)
                 with zipfile.ZipFile(photos_zip, 'r') as zip_ref:
                     zip_ref.extractall(extract_path)
-                messages.info(request, "✅ Фотографии успешно распакованы")
+                messages.info(request, "✅ Фотографии распакованы")
 
             wb = load_workbook(excel_file, data_only=True)
             sheet = wb.active
@@ -184,10 +184,10 @@ def bulk_import_view(request):
                 subcategory_name = values[2] if len(values) > 2 else ''
                 group_name = values[3] if len(values) > 3 else ''
                 prompt = values[4] if len(values) > 4 else ''
-                photos_str = values[5] if len(values) > 5 else ''  # ← НОВОЕ: несколько фото через запятую
+                photos_str = values[5] if len(values) > 5 else ''
 
                 if not filename or not category_name or not prompt:
-                    errors.append(f"Строка {row_num}: filename, category и prompt — обязательны")
+                    errors.append(f"Строка {row_num}: filename, category и prompt обязательны")
                     continue
 
                 try:
@@ -196,31 +196,32 @@ def bulk_import_view(request):
                     errors.append(f"Строка {row_num}: категория «{category_name}» не найдена")
                     continue
 
-                # ... (код создания subcategory и group — оставь как был)
+                subcategory = Subcategory.objects.filter(
+                    category=category, name__iexact=subcategory_name
+                ).first() if subcategory_name else None
 
-                # Создаём карточку
+                group = Group.objects.filter(name__iexact=group_name).first() if group_name else None
+
+                # === Главное изменение ===
                 item = ContentItem.objects.create(
                     category=category,
                     subcategory=subcategory,
                     group=group,
-                    full_text=prompt
+                    full_text=prompt,
+                    display_type=category.display_type,   # ← берём default
                 )
 
-                # Добавляем фото (несколько через запятую или одно)
-                photo_files = [f.strip() for f in photos_str.split(',') if f.strip()] if photos_str else [filename]
-                
-                for idx, photo_file in enumerate(photo_files):
+                # Фото
+                photo_list = [f.strip() for f in photos_str.split(',') if f.strip()] if photos_str else [filename]
+                for idx, photo_file in enumerate(photo_list):
                     photo_path = os.path.join('photos', photo_file)
                     full_path = os.path.join(settings.MEDIA_ROOT, photo_path)
-                    
                     if os.path.exists(full_path):
                         ContentItemPhoto.objects.create(
                             content_item=item,
                             photo=photo_path,
                             order=idx
                         )
-                    else:
-                        errors.append(f"Строка {row_num}: файл {photo_file} не найден")
 
                 created += 1
 
@@ -236,4 +237,3 @@ def bulk_import_view(request):
         form = BulkImportForm()
 
     return render(request, 'content/bulk_import.html', {'form': form})
-

@@ -5,24 +5,25 @@ from django.dispatch import receiver
 import os
 
 
+class DisplayType(models.TextChoices):
+    """Единый источник правды для типов отображения (2026 best practice)"""
+    SINGLE = 'single', 'Одиночное фото'
+    CAROUSEL = 'carousel', 'Карусель'
+    SLIDER = 'slider', 'Шторка (До/После)'
+
+
 class Category(models.Model):
     name = models.CharField(max_length=100, verbose_name="Название категории")
     slug = models.SlugField(unique=True, verbose_name="Slug")
     description = models.TextField(blank=True, verbose_name="Описание")
     order = models.PositiveIntegerField(default=0, verbose_name="Порядок в фильтрах")
 
-    # === Новое поле ===
-    DISPLAY_TYPE_CHOICES = [
-        ('single', 'Одиночное фото'),
-        ('carousel', 'Карусель'),
-        ('slider', 'Шторка (До/После)'),
-    ]
-
     display_type = models.CharField(
         max_length=20,
-        choices=DISPLAY_TYPE_CHOICES,
-        default='single',
-        verbose_name="Тип отображения карточек"
+        choices=DisplayType.choices,
+        default=DisplayType.SINGLE,
+        verbose_name="Тип отображения по умолчанию",
+        help_text="Используется как значение по умолчанию при создании новых карточек"
     )
 
     class Meta:
@@ -32,6 +33,7 @@ class Category(models.Model):
 
     def __str__(self):
         return self.name
+
 
 class Subcategory(models.Model):
     category = models.ForeignKey(
@@ -98,15 +100,10 @@ class ContentItemPhoto(models.Model):
         return f"Фото #{self.order} для {self.content_item}"
 
     def delete(self, *args, **kwargs):
-        """Удаляем файл при удалении записи"""
-        if self.photo:
-            try:
-                if os.path.isfile(self.photo.path):
-                    os.remove(self.photo.path)
-            except Exception:
-                pass
+        """Удаляем все связанные фото при удалении карточки"""
+        for photo in self.photos.all():
+            photo.delete()
         super().delete(*args, **kwargs)
-
 
 class ContentItem(models.Model):
     category = models.ForeignKey(
@@ -134,13 +131,12 @@ class ContentItem(models.Model):
         verbose_name="Группа"
     )
 
-    # Legacy-поле (будет удалено после data migration)
-    photo = models.ImageField(
-        upload_to='photos/',
-        verbose_name="Фото (устарело)",
-        null=True,
-        blank=True,
-        editable=False
+    display_type = models.CharField(
+        max_length=20,
+        choices=DisplayType.choices,
+        default=DisplayType.SINGLE,
+        verbose_name="Тип отображения фото",
+        help_text="Выбирается индивидуально для каждой карточки (независимо от категории)",
     )
 
     full_text = models.TextField(verbose_name="Текст для копирования")
@@ -152,7 +148,7 @@ class ContentItem(models.Model):
         ordering = ['-created_at']
 
     def __str__(self):
-        return f"{self.effective_category.name} — {self.full_text[:60]}..."
+        return f"{self.effective_category.name if self.effective_category else 'Без категории'} — {self.full_text[:60]}..."
 
     @property
     def effective_category(self):
@@ -163,64 +159,44 @@ class ContentItem(models.Model):
 
     @property
     def main_photo(self):
-       first = self.photos.first()
-       if first:
-           return first.photo  # объект ImageField
-       if self.photo:
-           return self.photo  # legacy
-       return None
+        first = self.photos.first()
+        if first:
+            return first.photo
+        if self.photo:
+            return self.photo
+        return None
 
     @property
     def has_multiple_photos(self):
         """Проверка для условного рендеринга"""
         return self.photos.count() > 1
 
-    @property
-    def display_type(self):
-        """Тип отображения карточки"""
-        if self.effective_category:
-            return self.effective_category.display_type
-        return 'single'
-
+    # === Убрана @property display_type — теперь прямое поле ===
     @property
     def is_ugc(self):
-        return self.display_type == 'carousel'
+        return self.display_type == DisplayType.CAROUSEL
 
     @property
     def is_upscale(self):
-        return self.display_type == 'slider'
-    
+        return self.display_type == DisplayType.SLIDER
+
     def delete(self, *args, **kwargs):
         """Удаляем все связанные фото при удалении карточки"""
-        # Удаляем все фото из ContentItemPhoto
         for photo in self.photos.all():
             photo.delete()
-        
-        # Удаляем legacy фото
-        if self.photo:
-            try:
-                if os.path.isfile(self.photo.path):
-                    os.remove(self.photo.path)
-            except Exception:
-                pass
         super().delete(*args, **kwargs)
 
 
 # ====================== Signals ======================
 @receiver(post_delete, sender=ContentItem)
 def delete_legacy_photo_on_delete(sender, instance, **kwargs):
-    """Дополнительная гарантия для legacy-поля"""
-    if instance.photo:
-        try:
-            if os.path.isfile(instance.photo.path):
-                os.remove(instance.photo.path)
-        except Exception:
-            pass
+    """Legacy-сигнал больше не нужен"""
+    pass
 
 
 @receiver(post_delete, sender=ContentItemPhoto)
 def delete_photo_file(sender, instance, **kwargs):
-    """Удаление файла новой модели"""
+    """Удаление файла при удалении ContentItemPhoto"""
     if instance.photo:
         try:
             if os.path.isfile(instance.photo.path):
