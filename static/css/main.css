@@ -540,3 +540,68 @@ header {
         justify-content: center;
     }
 }
+
+/* === Infinite Scroll Skeleton === */
+.skeleton-card {
+    background: #fff;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.skeleton {
+    background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.4s ease-in-out infinite;
+    border-radius: 6px;
+}
+
+@keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+.skeleton-photo {
+    height: 280px;
+    width: 100%;
+}
+
+.skeleton-line {
+    height: 14px;
+    margin: 10px 16px;
+}
+
+.skeleton-line.short { width: 60%; }
+.skeleton-line.medium { width: 80%; }
+
+.load-more-btn {
+    display: block;
+    margin: 30px auto;
+    padding: 14px 32px;
+    background: #111;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 15px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.load-more-btn:hover {
+    background: #222;
+    transform: translateY(-1px);
+}
+
+.infinite-scroll-container {
+    position: relative;
+}
+
+.htmx-indicator {
+    margin-top: 20px;
+}
+
+.skeleton-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 24px;
+}

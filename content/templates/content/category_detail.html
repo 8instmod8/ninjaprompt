@@ -28,41 +28,53 @@
             <p>{{ category.description }}</p>
         {% endif %}
     </div>
-
-    <div class="grid">
-        {% for item in items %}
-<div class="card" data-id="{{ item.id }}" data-category="{{ item.effective_category.slug }}">
-    <div class="photo-container">
-        {% if item.is_ugc and item.has_multiple_photos %}
-            {% include "content/ugc_carousel.html" with photos=item.photos.all %}
-        {% elif item.is_upscale and item.has_multiple_photos %}
-            {% include "content/upscale_slider.html" with photos=item.photos.all %}
-        {% else %}
-            <img src="{{ item.main_photo.url }}" 
-                 alt="{{ item.effective_category.name }}"
-                 loading="lazy"
-                 class="main-photo">
-        {% endif %}
-        
-        <div class="category-badge">{{ item.effective_category.name }}</div>
-    </div>
-
-    <div class="card-body">
-        <div class="tags">
-    		{% if item.group %}
-        		<a href="{% url 'content:group_detail' item.group.slug %}" 
-          		 class="group-name-badge">{{ item.group.name }}</a>
-    		{% endif %}
-
-    		{% if item.subcategory %}
-        		<a href="{% url 'content:subcategory_detail' item.effective_category.slug item.subcategory.slug %}" 
-           		class="group-name-badge">{{ item.subcategory.name }}</a>
-    		{% endif %}
-	</div>
-     <button class="copy-btn" data-id="{{ item.id }}">Скопировать промпт</button>
-    </div>
+<div class="grid" id="cards-grid">
+    {% for item in items %}
+        {% include "content/_card.html" %}
+    {% endfor %}
 </div>
-        {% endfor %}
+
+<!-- === Hybrid Infinite Scroll === -->
+<div class="infinite-scroll-container">
+
+    <!-- Автоматический триггер -->
+    {% if page_obj.has_next %}
+    <div id="auto-load-trigger"
+         hx-get="?page={{ page_obj.next_page_number }}"
+         hx-trigger="intersect once"
+         hx-swap="beforeend"
+         hx-target="#cards-grid"
+         hx-indicator="#loading-indicator">
     </div>
-	{% include "content/_pagination.html" %}
+    {% endif %}
+
+    <!-- Fallback кнопка "Загрузить ещё" -->
+    {% if page_obj.has_next %}
+    <button id="load-more-btn"
+            class="load-more-btn"
+            hx-get="?page={{ page_obj.next_page_number }}"
+            hx-swap="beforeend"
+            hx-target="#cards-grid"
+            hx-indicator="#loading-indicator"
+            onclick="this.style.display='none'">
+        Загрузить ещё
+    </button>
+    {% endif %}
+
+    <!-- Skeleton во время загрузки -->
+    <div id="loading-indicator" class="htmx-indicator" style="display: none;">
+        <div class="skeleton-grid">
+            {% for i in "1234" %}
+            <div class="skeleton-card">
+                <div class="skeleton skeleton-photo"></div>
+                <div class="skeleton-line short"></div>
+                <div class="skeleton-line medium"></div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+</div>
+
+{% include "content/_pagination.html" %}
 {% endblock %}

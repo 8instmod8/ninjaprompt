@@ -1,0 +1,44 @@
+{# content/templates/content/_card.html #}
+<div class="card" data-id="{{ item.id }}" data-category="{{ item.effective_category.slug|default:'' }}">
+    <div class="photo-container">
+        {% if item.photos.count > 1 %}
+            {% if item.is_upscale %}
+                {% include "content/upscale_slider.html" with photos=item.photos.all %}
+            {% elif item.is_ugc %}
+                {% include "content/ugc_carousel.html" with photos=item.photos.all %}
+            {% else %}
+                <img src="{{ item.main_photo.url }}" 
+                     alt="{{ item.effective_category.name|default:'Промпт' }}" 
+                     loading="lazy" class="main-photo">
+            {% endif %}
+        {% else %}
+            <img src="{{ item.main_photo.url }}" 
+                 alt="{{ item.effective_category.name|default:'Промпт' }}" 
+                 loading="lazy" class="main-photo">
+        {% endif %}
+
+        <div class="category-badge">
+            {{ item.effective_category.name|default:'Промпт' }}
+        </div>
+    </div>
+
+    <div class="card-body">
+        <div class="tags">
+            {% if item.group %}
+                <a href="{% url 'content:group_detail' item.group.slug %}" class="group-name-badge">
+                    {{ item.group.name }}
+                </a>
+            {% endif %}
+            {% if item.subcategory %}
+                <a href="{% url 'content:subcategory_detail' item.effective_category.slug item.subcategory.slug %}" 
+                   class="group-name-badge">
+                    {{ item.subcategory.name }}
+                </a>
+            {% endif %}
+        </div>
+
+        <button class="copy-btn" data-id="{{ item.id }}">
+            Скопировать промпт
+        </button>
+    </div>
+</div>

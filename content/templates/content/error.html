@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ошибка — NinjaPrompt</title>
+    
+    <link rel="icon" href="{% static 'images/ninp.png' %}" type="image/png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Space+Grotesk:wght@500;600&amp;display=swap');
+        
+        body { 
+            font-family: 'Inter', system_ui, sans-serif; 
+            background: #09090b;
+        }
+        .font-display { 
+            font-family: 'Space Grotesk', 'Inter', system_ui, sans-serif; 
+        }
+        
+        .red-glow {
+            box-shadow: 0 0 60px -15px rgb(239 68 68 / 0.3);
+        }
+    </style>
+</head>
+<body class="bg-zinc-950 text-white">
+
+    <!-- ХЕДЕР -->
+    <nav class="sticky top-0 z-50 bg-zinc-950/95 backdrop-blur-lg border-b border-zinc-800">
+        <div class="max-w-screen-2xl mx-auto px-8">
+            <div class="flex items-center justify-between" style="padding: 20px 0;">
+                <div class="flex items-center">
+                    <img src="{% static 'images/ninja-prompt.png' %}" 
+                         alt="Ninja Prompt" 
+                         class="h-[52px] w-auto filter brightness-0 invert">
+                </div>
+
+                <div class="hidden md:flex items-center gap-x-9 text-[15px] font-medium">
+                    <a href="/prompts" class="text-white hover:text-zinc-300 transition-colors">Готовые промпты</a>
+                    <a href="/school" class="text-white hover:text-zinc-300 transition-colors">Обучение</a>
+                    <a href="/about" class="text-white hover:text-zinc-300 transition-colors">О нас</a>
+                </div>
+
+                <div class="flex items-center gap-x-5">
+                    <a href="https://t.me/ninjaprompt" target="_blank" class="text-white hover:text-zinc-400 transition-colors">
+                        <i class="fa-brands fa-telegram text-[22px]"></i>
+                    </a>
+                    <a href="https://instagram.com/ninjapromt" target="_blank" class="text-white hover:text-zinc-400 transition-colors">
+                        <i class="fa-brands fa-instagram text-[22px]"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ОСНОВНОЙ КОНТЕНТ -->
+    <div class="min-h-[78vh] flex items-center justify-center px-6 relative overflow-hidden">
+        
+        <!-- Красные свечения -->
+        <div class="absolute inset-0 pointer-events-none">
+            <div class="absolute top-[-120px] left-[-80px] w-[520px] h-[520px] bg-red-600/20 rounded-full blur-[130px]"></div>
+            <div class="absolute bottom-[-100px] right-[-60px] w-[420px] h-[420px] bg-orange-500/10 rounded-full blur-[110px]"></div>
+        </div>
+
+	<div class="relative z-10 max-w-[520px] text-center pt-8">
+            
+            <!-- Иконка (сдвинута ниже) -->
+            <div class="mx-auto w-24 h-24 bg-red-500/10 rounded-full flex items-center justify-center mb-12 red-glow mt-6">
+                <i class="fas fa-exclamation-triangle text-red-500 text-6xl"></i>
+            </div>
+
+            <h1 class="font-display text-[56px] md:text-[68px] leading-[0.92] font-extrabold tracking-[-2.8px] mb-6">
+                Что-то<br>сломалось
+            </h1>
+            
+            <p class="text-2xl text-zinc-400 mb-10 max-w-[380px] mx-auto">
+                Мы уже получили уведомление и исправляем проблему.
+            </p>
+
+            <!-- Кнопки -->
+            <div class="flex flex-col sm:flex-row gap-4 justify-center mb-12">
+                <a href="/" 
+                   class="inline-flex items-center justify-center gap-3 bg-white hover:bg-zinc-100 transition-all text-zinc-900 font-semibold text-lg px-10 py-4 rounded-2xl">
+                    <i class="fas fa-home"></i>
+                    <span>На главную</span>
+                </a>
+                
+                <button onclick="window.location.reload()" 
+                        class="inline-flex items-center justify-center gap-3 border border-zinc-700 hover:bg-zinc-900 transition-all text-white font-semibold text-lg px-10 py-4 rounded-2xl">
+                    <i class="fas fa-redo"></i>
+                    <span>Обновить</span>
+                </button>
+            </div>
+
+            <!-- === НОВАЯ ФРАЗА === -->
+            <div class="text-center">
+                <p class="text-sm text-zinc-500">
+                    Если проблема повторяется — напишите нам в 
+                    <a href="https://t.me/ninjaprompt" target="_blank" 
+                       class="text-red-400 hover:text-red-300 underline decoration-red-500/30 hover:decoration-red-400 transition-colors">
+                        Telegram
+                    </a>
+                </p>
+            </div>
+
+            <!-- Техническая информация -->
+            {% if error and debug %}
+                <div class="mt-10 bg-zinc-900 border border-zinc-800 rounded-2xl p-5 text-left max-w-md mx-auto">
+                    <div class="text-red-400 text-sm font-medium mb-2 flex items-center gap-2">
+                        <i class="fas fa-bug"></i>
+                        <span>Техническая информация</span>
+                    </div>
+                    <div class="text-red-300/80 text-xs font-mono break-all">
+                        {{ error }}
+                    </div>
+                </div>
+            {% endif %}
+
+        </div>
+    </div>
+
+</body>
+</html>

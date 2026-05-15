@@ -1,0 +1,15 @@
+{# content/templates/content/_card_list.html #}
+{% for item in items %}
+    {% include "content/_card.html" %}
+{% endfor %}
+
+{% if not is_last_page %}
+    <!-- Динамический триггер следующей страницы -->
+    <div hx-get="?page={{ page_obj.next_page_number }}"
+         hx-trigger="intersect once"
+         hx-swap="beforeend"
+         hx-target="#cards-grid"
+         hx-indicator="#loading-indicator"
+         class="infinite-scroll-trigger">
+    </div>
+{% endif %}

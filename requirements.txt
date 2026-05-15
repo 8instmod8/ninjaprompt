@@ -13,3 +13,4 @@ tzdata==2025.3
 whitenoise==6.11.0
 openpyxl
 transliterate
+django-htmx==1.27.0
