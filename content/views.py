@@ -57,7 +57,7 @@ def copy_content(request, pk):
 def content_list(request):
     qs = ContentItem.objects.select_related('category', 'subcategory__category', 'group')\
                             .prefetch_related('photos').order_by('-created_at')
-    paginator = Paginator(qs, 20)
+    paginator = Paginator(qs, 12)
     page_obj = paginator.get_page(request.GET.get('page', 1))
 
     context = {
@@ -88,7 +88,7 @@ def category_detail(request, slug):
         models.Q(category=top_category) | models.Q(subcategory__category=top_category)
     ).select_related('category', 'subcategory__category', 'group').prefetch_related('photos').order_by('-created_at')
 
-    paginator = Paginator(items, 20)
+    paginator = Paginator(items, 12)
     page_obj = paginator.get_page(request.GET.get('page'))
 
     context = {
@@ -122,7 +122,7 @@ def subcategory_detail(request, category_slug, subcategory_slug):
     items = ContentItem.objects.filter(subcategory=subcategory)\
         .select_related('category', 'group').prefetch_related('photos').order_by('-created_at')
 
-    paginator = Paginator(items, 20)
+    paginator = Paginator(items, 12)
     page_obj = paginator.get_page(request.GET.get('page'))
 
     context = {

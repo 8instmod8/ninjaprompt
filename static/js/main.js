@@ -1,5 +1,5 @@
 // =============================================
-// main.js — Ninja Prompts (полная стабильная версия)
+// main.js — Ninja Prompts (финальная стабильная версия 2026)
 // =============================================
 
 function getCookie(name) {
@@ -22,13 +22,11 @@ function initMobileMenu() {
     const btn = document.getElementById('mobile-menu-btn');
     const menu = document.getElementById('mobile-menu');
     const icon = document.getElementById('burger-icon');
-
     if (!btn || !menu || !icon) return;
 
     btn.addEventListener('click', () => {
         const isOpen = menu.classList.toggle('open');
         btn.setAttribute('aria-expanded', isOpen);
-
         icon.classList.toggle('fa-bars', !isOpen);
         icon.classList.toggle('fa-xmark', isOpen);
     });
@@ -43,23 +41,20 @@ function initMobileMenu() {
     });
 }
 
-// ====================== КОПИРОВАНИЕ ПРОМПТОВ (финальная версия 2026, без data-text) ======================
+// ====================== КОПИРОВАНИЕ ПРОМПТОВ ======================
 function initCopyButtons() {
     document.querySelectorAll('.copy-btn').forEach(button => {
         button.addEventListener('click', async function() {
             const itemId = this.dataset.id;
             const originalText = this.innerHTML;
-
             this.disabled = true;
             this.innerHTML = 'Копируем...';
 
             let success = false;
-
             try {
-                const csrfToken = getCookie('csrftoken') || 
+                const csrfToken = getCookie('csrftoken') ||
                     document.querySelector('[name=csrfmiddlewaretoken]')?.value || '';
 
-                // === ГЛАВНЫЙ ФИКС ДЛЯ iOS SAFARI ===
                 if (navigator.clipboard && navigator.clipboard.write) {
                     await navigator.clipboard.write([
                         new ClipboardItem({
@@ -79,9 +74,7 @@ function initCopyButtons() {
                         })
                     ]);
                     success = true;
-                } 
-                else {
-                    // Fallback для совсем старых браузеров (редко в 2026)
+                } else {
                     const res = await fetch(`/api/copy/${itemId}/`, {
                         method: 'POST',
                         headers: { 'X-CSRFToken': csrfToken },
@@ -99,7 +92,6 @@ function initCopyButtons() {
                     success = document.execCommand('copy');
                     document.body.removeChild(ta);
                 }
-
             } catch (e) {
                 console.error('[NinjaPrompt] Copy error:', e);
             }
@@ -142,7 +134,7 @@ function triggerScreenshotProtection() {
         <p style="font-size: 20px; max-width: 620px;">
             Любое копирование контента запрещено.
         </p>
-        <button onclick="this.parentElement.remove(); document.body.classList.remove('screenshot-detected');" 
+        <button onclick="this.parentElement.remove(); document.body.classList.remove('screenshot-detected');"
                 style="margin-top: 30px; padding: 16px 48px; font-size: 18px; background: #e11d48; color: white; border: none; border-radius: 12px; cursor: pointer;">
             Понятно
         </button>
@@ -171,10 +163,13 @@ document.addEventListener('contextmenu', e => {
     }
 });
 
-document.addEventListener('DOMContentLoaded', function () {
-    document.querySelectorAll('.comparison-slider').forEach(slider => {
+// ====================== COMPARISON SLIDER (До/После) ======================
+function initComparisonSliders(container = document) {
+    container.querySelectorAll('.comparison-slider').forEach(slider => {
         const divider = slider.querySelector('.divider');
         const before = slider.querySelector('.before-img');
+        if (!divider || !before) return;
+
         let isDragging = false;
 
         function move(clientX) {
@@ -196,23 +191,75 @@ document.addEventListener('DOMContentLoaded', function () {
         // Начальная позиция 50%
         setTimeout(() => move(slider.getBoundingClientRect().left + slider.offsetWidth / 2), 100);
     });
-});
+}
 
-// Fallback: показать кнопку через 4 секунды
-document.addEventListener('DOMContentLoaded', () => {
+// ====================== UGC SWIPER ======================
+function initUgcSwipers(container = document) {
+    container.querySelectorAll('.ugc-swiper').forEach(swiperEl => {
+        if (swiperEl.swiper) return; // уже инициализирован
+
+        new Swiper(swiperEl, {
+            loop: true,
+            speed: 600,
+            pagination: {
+                el: swiperEl.querySelector('.swiper-pagination'),
+                clickable: true,
+            },
+            navigation: {
+                nextEl: swiperEl.querySelector('.swiper-button-next'),
+                prevEl: swiperEl.querySelector('.swiper-button-prev'),
+            },
+            lazy: true,
+            preloadImages: false,
+            watchSlidesProgress: true,
+        });
+    });
+}
+
+// ====================== FALLBACK КНОПКА ======================
+function initLoadMoreFallback() {
     const btn = document.getElementById('load-more-btn');
     if (!btn) return;
 
     setTimeout(() => {
-        if (getComputedStyle(btn).display === 'none') {
+        const hasTrigger = document.querySelector('.infinite-scroll-trigger');
+        if (hasTrigger && btn.style.display === 'none') {
             btn.style.display = 'block';
         }
     }, 4000);
-});
+}
 
-// ====================== ИНИЦИАЛИЗАЦИЯ ======================
+// ====================== ГЛАВНАЯ ИНИЦИАЛИЗАЦИЯ ======================
 document.addEventListener('DOMContentLoaded', () => {
     initMobileMenu();
     initCopyButtons();
+    initComparisonSliders();
+    initUgcSwipers();
+    initLoadMoreFallback();
+
+    // Скрываем кнопку, если нет следующей страницы
+    const btn = document.getElementById('load-more-btn');
+    if (btn && !document.querySelector('.infinite-scroll-trigger')) {
+        btn.style.display = 'none';
+    }
+
     console.log('%c[NinjaPrompt] Инициализация завершена', 'color:#22c55e');
+});
+
+// Обработка после HTMX подгрузки (скрытие кнопки + повторная инициализация)
+document.body.addEventListener('htmx:afterSwap', (event) => {
+    if (event.detail.target.id === 'cards-grid') {
+        // Скрываем кнопку, если больше нет страниц
+        const btn = document.getElementById('load-more-btn');
+        if (btn) {
+            const hasTrigger = event.detail.target.querySelector('.infinite-scroll-trigger');
+            if (!hasTrigger) {
+                btn.style.display = 'none';
+            }
+        }
+
+        // Повторная инициализация слайдеров и Swiper
+        initComparisonSliders(event.detail.target);
+        initUgcSwipers(event.detail.target);
+    }
 });

@@ -1,5 +1,5 @@
 {% load static %}
-
+{% if photos|length >= 2 %}
 <div class="comparison-slider">
     <img src="{{ photos.0.photo.url }}" class="before-img" alt="До">
     <img src="{{ photos.1.photo.url|default:photos.0.photo.url }}" class="after-img" alt="После">
@@ -8,7 +8,4 @@
         <div class="handle">⇆</div>
     </div>
 </div>
-
-
-
-
+{% endif %}

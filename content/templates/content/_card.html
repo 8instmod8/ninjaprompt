@@ -7,14 +7,18 @@
             {% elif item.is_ugc %}
                 {% include "content/ugc_carousel.html" with photos=item.photos.all %}
             {% else %}
+                {% if item.main_photo %}
+                    <img src="{{ item.main_photo.url }}" 
+                         alt="{{ item.effective_category.name|default:'Промпт' }}" 
+                         loading="lazy" class="main-photo">
+                {% endif %}
+            {% endif %}
+        {% else %}
+            {% if item.main_photo %}
                 <img src="{{ item.main_photo.url }}" 
                      alt="{{ item.effective_category.name|default:'Промпт' }}" 
                      loading="lazy" class="main-photo">
             {% endif %}
-        {% else %}
-            <img src="{{ item.main_photo.url }}" 
-                 alt="{{ item.effective_category.name|default:'Промпт' }}" 
-                 loading="lazy" class="main-photo">
         {% endif %}
 
         <div class="category-badge">
@@ -29,7 +33,7 @@
                     {{ item.group.name }}
                 </a>
             {% endif %}
-            {% if item.subcategory %}
+            {% if item.subcategory and item.effective_category %}
                 <a href="{% url 'content:subcategory_detail' item.effective_category.slug item.subcategory.slug %}" 
                    class="group-name-badge">
                     {{ item.subcategory.name }}

@@ -13,17 +13,18 @@
         {% endfor %}
     </div>
 
-    <!-- === Минимальный триггер для автоподгрузки (невидимый) === -->
-    {% if page_obj.has_next %}
-        <div class="infinite-scroll-trigger"
-             hx-get="?page={{ page_obj.next_page_number }}"
-             hx-trigger="intersect once"
-             hx-swap="beforeend"
-             hx-target="#cards-grid"
-             hx-indicator="#loading-indicator"
-             aria-hidden="true">
-        </div>
-    {% endif %}
+  {% if page_obj.has_next %}
+      <div class="infinite-scroll-fullwidth">
+          <div class="infinite-scroll-trigger"
+               hx-get="?page={{ page_obj.next_page_number }}"
+               hx-trigger="intersect once"
+               hx-swap="beforeend"
+               hx-target="#cards-grid"
+               hx-indicator="#loading-indicator"
+               aria-hidden="true">
+          </div>
+      </div>
+  {% endif %}
 
     <!-- Fallback кнопка (показывается только если HTMX не сработает) -->
     {% if page_obj.has_next %}

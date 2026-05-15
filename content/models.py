@@ -162,8 +162,6 @@ class ContentItem(models.Model):
         first = self.photos.first()
         if first:
             return first.photo
-        if self.photo:
-            return self.photo
         return None
 
     @property

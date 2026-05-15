@@ -607,29 +607,18 @@ header {
 }
 
 /* === Infinite Scroll - финальная версия === */
-.infinite-scroll-fullwidth {
-    grid-column: 1 / -1;     /* занимает все колонки грида */
-    width: 100%;
-}
-
 .infinite-scroll-trigger {
     display: block;
     height: 20px;
     margin-top: -20px;
     opacity: 0;
     pointer-events: none;
-}
-.infinite-scroll-trigger {
-    display: block;
-    height: 0 !important;
-    min-height: 0 !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    border: none !important;
-    opacity: 0;
-    pointer-events: none;
     overflow: hidden;
-    content-visibility: hidden;
+}
+
+.infinite-scroll-fullwidth {
+    grid-column: 1 / -1;
+    width: 100%;
 }
 
 /* Кнопка fallback */
