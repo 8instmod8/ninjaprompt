@@ -1,15 +1,18 @@
-{# content/templates/content/_card_list.html #}
+{# Только карточки + триггер следующей страницы #}
 {% for item in items %}
     {% include "content/_card.html" %}
 {% endfor %}
 
-{% if not is_last_page %}
-    <!-- Р”РёРЅР°РјРёС‡РµСЃРєРёР№ С‚СЂРёРіРіРµСЂ СЃР»РµРґСѓСЋС‰РµР№ СЃС‚СЂР°РЅРёС†С‹ -->
-    <div hx-get="?page={{ page_obj.next_page_number }}"
-         hx-trigger="intersect once"
-         hx-swap="beforeend"
-         hx-target="#cards-grid"
-         hx-indicator="#loading-indicator"
-         class="infinite-scroll-trigger">
+{% if page_obj.has_next %}
+    <!-- Полноширинный контейнер для триггера -->
+    <div class="infinite-scroll-fullwidth">
+        <div class="infinite-scroll-trigger"
+             hx-get="?page={{ page_obj.next_page_number }}"
+             hx-trigger="intersect once"
+             hx-swap="beforeend"
+             hx-target="#cards-grid"
+             hx-indicator="#loading-indicator"
+             aria-hidden="true">
+        </div>
     </div>
 {% endif %}

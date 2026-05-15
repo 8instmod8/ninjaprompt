@@ -171,6 +171,45 @@ document.addEventListener('contextmenu', e => {
     }
 });
 
+document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('.comparison-slider').forEach(slider => {
+        const divider = slider.querySelector('.divider');
+        const before = slider.querySelector('.before-img');
+        let isDragging = false;
+
+        function move(clientX) {
+            const rect = slider.getBoundingClientRect();
+            let percent = ((clientX - rect.left) / rect.width) * 100;
+            percent = Math.max(5, Math.min(95, percent));
+            divider.style.left = percent + '%';
+            before.style.clipPath = `polygon(0 0, ${percent}% 0, ${percent}% 100%, 0 100%)`;
+        }
+
+        divider.addEventListener('mousedown', () => isDragging = true);
+        document.addEventListener('mouseup', () => isDragging = false);
+        document.addEventListener('mousemove', e => isDragging && move(e.clientX));
+
+        divider.addEventListener('touchstart', () => isDragging = true);
+        document.addEventListener('touchend', () => isDragging = false);
+        document.addEventListener('touchmove', e => isDragging && move(e.touches[0].clientX));
+
+        // Начальная позиция 50%
+        setTimeout(() => move(slider.getBoundingClientRect().left + slider.offsetWidth / 2), 100);
+    });
+});
+
+// Fallback: показать кнопку через 4 секунды
+document.addEventListener('DOMContentLoaded', () => {
+    const btn = document.getElementById('load-more-btn');
+    if (!btn) return;
+
+    setTimeout(() => {
+        if (getComputedStyle(btn).display === 'none') {
+            btn.style.display = 'block';
+        }
+    }, 4000);
+});
+
 // ====================== ИНИЦИАЛИЗАЦИЯ ======================
 document.addEventListener('DOMContentLoaded', () => {
     initMobileMenu();

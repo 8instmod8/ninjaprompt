@@ -3,57 +3,52 @@
 {% block title %}Ninja Prompts - Библиотека промптов{% endblock %}
 
 {% block content %}
-    	<div style="padding: 30px 50px 1px;">
-        	<h1>Все промпты</h1>
-    	</div>
-<div class="grid" id="cards-grid">
-    {% for item in items %}
-        {% include "content/_card.html" %}
-    {% endfor %}
-</div>
-
-<!-- === Hybrid Infinite Scroll === -->
-<div class="infinite-scroll-container">
-
-    <!-- Автоматический триггер -->
-    {% if page_obj.has_next %}
-    <div id="auto-load-trigger"
-         hx-get="?page={{ page_obj.next_page_number }}"
-         hx-trigger="intersect once"
-         hx-swap="beforeend"
-         hx-target="#cards-grid"
-         hx-indicator="#loading-indicator">
+    <div style="padding: 30px 50px 1px;">
+        <h1>Все промпты</h1>
     </div>
-    {% endif %}
 
-    <!-- Fallback кнопка "Загрузить ещё" -->
+    <div class="grid" id="cards-grid">
+        {% for item in items %}
+            {% include "content/_card.html" %}
+        {% endfor %}
+    </div>
+
+    <!-- === Минимальный триггер для автоподгрузки (невидимый) === -->
     {% if page_obj.has_next %}
-    <button id="load-more-btn"
-            class="load-more-btn"
-            hx-get="?page={{ page_obj.next_page_number }}"
-            hx-swap="beforeend"
-            hx-target="#cards-grid"
-            hx-indicator="#loading-indicator"
-            onclick="this.style.display='none'">
-        Загрузить ещё
-    </button>
+        <div class="infinite-scroll-trigger"
+             hx-get="?page={{ page_obj.next_page_number }}"
+             hx-trigger="intersect once"
+             hx-swap="beforeend"
+             hx-target="#cards-grid"
+             hx-indicator="#loading-indicator"
+             aria-hidden="true">
+        </div>
     {% endif %}
 
-    <!-- Skeleton во время загрузки -->
-    <div id="loading-indicator" class="htmx-indicator" style="display: none;">
+    <!-- Fallback кнопка (показывается только если HTMX не сработает) -->
+    {% if page_obj.has_next %}
+        <button id="load-more-btn"
+                class="load-more-btn"
+                hx-get="?page={{ page_obj.next_page_number }}"
+                hx-swap="beforeend"
+                hx-target="#cards-grid"
+                hx-indicator="#loading-indicator"
+                style="display: none;">
+            Загрузить ещё
+        </button>
+    {% endif %}
+
+    <!-- Skeleton -->
+    <div id="loading-indicator" class="htmx-indicator">
         <div class="skeleton-grid">
             {% for i in "1234" %}
-            <div class="skeleton-card">
-                <div class="skeleton skeleton-photo"></div>
-                <div class="skeleton-line short"></div>
-                <div class="skeleton-line medium"></div>
-            </div>
+                <div class="skeleton-card">
+                    <div class="skeleton skeleton-photo"></div>
+                    <div class="skeleton-line short"></div>
+                    <div class="skeleton-line medium"></div>
+                </div>
             {% endfor %}
         </div>
     </div>
 
-</div>
-
-{% include "content/_pagination.html" %}
-{% include "content/_pagination.html" %}
 {% endblock %}

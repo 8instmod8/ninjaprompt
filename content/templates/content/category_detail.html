@@ -37,17 +37,18 @@
 <!-- === Hybrid Infinite Scroll === -->
 <div class="infinite-scroll-container">
 
-    <!-- Автоматический триггер -->
     {% if page_obj.has_next %}
-    <div id="auto-load-trigger"
-         hx-get="?page={{ page_obj.next_page_number }}"
-         hx-trigger="intersect once"
-         hx-swap="beforeend"
-         hx-target="#cards-grid"
-         hx-indicator="#loading-indicator">
+    <!-- Динамический триггер следующей страницы -->
+    <div 
+        class="infinite-scroll-trigger"
+        hx-get="?page={{ page_obj.next_page_number }}"
+        hx-trigger="intersect once"
+        hx-swap="beforeend"
+        hx-target="#cards-grid"
+        hx-indicator="#loading-indicator"
+        aria-hidden="true">
     </div>
     {% endif %}
-
     <!-- Fallback кнопка "Загрузить ещё" -->
     {% if page_obj.has_next %}
     <button id="load-more-btn"
