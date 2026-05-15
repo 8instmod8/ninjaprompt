@@ -2,6 +2,11 @@
 
 {% block title %}Ninja Prompts - Библиотека промптов{% endblock %}
 
+{# Блок фильтров объявлен для единообразия с category_detail.html.
+   Пока пустой — при необходимости сюда можно будет добавить фильтры. #}
+{% block filters %}
+{% endblock %}
+
 {% block content %}
     <div style="padding: 30px 50px 1px;">
         <h1>Все промпты</h1>
@@ -13,43 +18,51 @@
         {% endfor %}
     </div>
 
-  {% if page_obj.has_next %}
-      <div class="infinite-scroll-fullwidth">
-          <div class="infinite-scroll-trigger"
-               hx-get="?page={{ page_obj.next_page_number }}"
-               hx-trigger="intersect once"
-               hx-swap="beforeend"
-               hx-target="#cards-grid"
-               hx-indicator="#loading-indicator"
-               aria-hidden="true">
-          </div>
-      </div>
-  {% endif %}
+    <!-- === Hybrid Infinite Scroll (унифицировано с category_detail.html) === -->
+    <div class="infinite-scroll-container">
 
-    <!-- Fallback кнопка (показывается только если HTMX не сработает) -->
-    {% if page_obj.has_next %}
-        <button id="load-more-btn"
-                class="load-more-btn"
+        {% if page_obj.has_next %}
+            <!-- Динамический триггер следующей страницы -->
+            <div 
+                class="infinite-scroll-trigger"
                 hx-get="?page={{ page_obj.next_page_number }}"
+                hx-trigger="intersect once"
                 hx-swap="beforeend"
                 hx-target="#cards-grid"
                 hx-indicator="#loading-indicator"
-                style="display: none;">
-            Загрузить ещё
-        </button>
-    {% endif %}
+                aria-hidden="true">
+            </div>
+        {% endif %}
 
-    <!-- Skeleton -->
-    <div id="loading-indicator" class="htmx-indicator">
-        <div class="skeleton-grid">
-            {% for i in "1234" %}
-                <div class="skeleton-card">
-                    <div class="skeleton skeleton-photo"></div>
-                    <div class="skeleton-line short"></div>
-                    <div class="skeleton-line medium"></div>
-                </div>
-            {% endfor %}
+        <!-- Fallback кнопка "Загрузить ещё" -->
+        {% if page_obj.has_next %}
+            <button id="load-more-btn"
+                    class="load-more-btn"
+                    hx-get="?page={{ page_obj.next_page_number }}"
+                    hx-swap="beforeend"
+                    hx-target="#cards-grid"
+                    hx-indicator="#loading-indicator"
+                    onclick="this.style.display='none'">
+                Загрузить ещё
+            </button>
+        {% endif %}
+
+        <!-- Skeleton (скрыт по умолчанию) -->
+        <div id="loading-indicator" class="htmx-indicator" style="display: none;">
+            <div class="skeleton-grid">
+                {% for i in "1234" %}
+                    <div class="skeleton-card">
+                        <div class="skeleton skeleton-photo"></div>
+                        <div class="skeleton-line short"></div>
+                        <div class="skeleton-line medium"></div>
+                    </div>
+                {% endfor %}
+            </div>
         </div>
+
     </div>
+
+    <!-- Классическая пагинация (для SEO и пользователей без JS) -->
+    {% include "content/_pagination.html" %}
 
 {% endblock %}
