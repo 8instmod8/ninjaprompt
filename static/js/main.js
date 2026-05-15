@@ -41,76 +41,92 @@ function initMobileMenu() {
     });
 }
 
-// ====================== КОПИРОВАНИЕ ПРОМПТОВ ======================
-function initCopyButtons() {
-    document.querySelectorAll('.copy-btn').forEach(button => {
-        button.addEventListener('click', async function() {
-            const itemId = this.dataset.id;
-            const originalText = this.innerHTML;
-            this.disabled = true;
-            this.innerHTML = 'Копируем...';
+// ====================== КОПИРОВАНИЕ ПРОМПТОВ (EVENT DELEGATION) ======================
+function handleCopy(button) {
+    const itemId = button.dataset.id;
+    const originalText = button.innerHTML;
 
-            let success = false;
-            try {
-                const csrfToken = getCookie('csrftoken') ||
-                    document.querySelector('[name=csrfmiddlewaretoken]')?.value || '';
+    if (button.disabled) return; // защита от двойного клика
 
-                if (navigator.clipboard && navigator.clipboard.write) {
-                    await navigator.clipboard.write([
-                        new ClipboardItem({
-                            "text/plain": fetch(`/api/copy/${itemId}/`, {
-                                method: 'POST',
-                                headers: { 'X-CSRFToken': csrfToken },
-                                credentials: 'same-origin'
-                            })
-                            .then(res => {
-                                if (!res.ok) throw new Error('Server error');
-                                return res.json();
-                            })
-                            .then(data => {
-                                if (!data.success || !data.text) throw new Error('No text');
-                                return new Blob([data.text], { type: "text/plain" });
-                            })
+    button.disabled = true;
+    button.innerHTML = 'Копируем...';
+
+    let success = false;
+
+    (async () => {
+        try {
+            const csrfToken = getCookie('csrftoken') ||
+                document.querySelector('[name=csrfmiddlewaretoken]')?.value || '';
+
+            if (navigator.clipboard && navigator.clipboard.write) {
+                await navigator.clipboard.write([
+                    new ClipboardItem({
+                        "text/plain": fetch(`/api/copy/${itemId}/`, {
+                            method: 'POST',
+                            headers: { 'X-CSRFToken': csrfToken },
+                            credentials: 'same-origin'
                         })
-                    ]);
-                    success = true;
-                } else {
-                    const res = await fetch(`/api/copy/${itemId}/`, {
-                        method: 'POST',
-                        headers: { 'X-CSRFToken': csrfToken },
-                        credentials: 'same-origin'
-                    });
-                    const data = await res.json();
-                    if (!data.success || !data.text) throw new Error('No text');
-
-                    const ta = document.createElement('textarea');
-                    ta.value = data.text;
-                    ta.style.cssText = 'position:fixed;top:-9999px;left:-9999px;opacity:0';
-                    document.body.appendChild(ta);
-                    ta.focus();
-                    ta.select();
-                    success = document.execCommand('copy');
-                    document.body.removeChild(ta);
-                }
-            } catch (e) {
-                console.error('[NinjaPrompt] Copy error:', e);
-            }
-
-            if (success) {
-                this.innerHTML = 'Скопировано!';
-                this.style.backgroundColor = '#22c55e';
+                        .then(res => {
+                            if (!res.ok) throw new Error('Server error');
+                            return res.json();
+                        })
+                        .then(data => {
+                            if (!data.success || !data.text) throw new Error('No text');
+                            return new Blob([data.text], { type: "text/plain" });
+                        })
+                    })
+                ]);
+                success = true;
             } else {
-                this.innerHTML = 'Ошибка';
-                this.style.backgroundColor = '#ef4444';
-            }
+                const res = await fetch(`/api/copy/${itemId}/`, {
+                    method: 'POST',
+                    headers: { 'X-CSRFToken': csrfToken },
+                    credentials: 'same-origin'
+                });
+                const data = await res.json();
+                if (!data.success || !data.text) throw new Error('No text');
 
-            setTimeout(() => {
-                this.innerHTML = originalText;
-                this.style.backgroundColor = '#111';
-                this.disabled = false;
-            }, success ? 1600 : 2400);
-        });
-    });
+                const ta = document.createElement('textarea');
+                ta.value = data.text;
+                ta.style.cssText = 'position:fixed;top:-9999px;left:-9999px;opacity:0';
+                document.body.appendChild(ta);
+                ta.focus();
+                ta.select();
+                success = document.execCommand('copy');
+                document.body.removeChild(ta);
+            }
+        } catch (e) {
+            console.error('[NinjaPrompt] Copy error:', e);
+        }
+
+        if (success) {
+            button.innerHTML = 'Скопировано!';
+            button.style.backgroundColor = '#22c55e';
+        } else {
+            button.innerHTML = 'Ошибка';
+            button.style.backgroundColor = '#ef4444';
+        }
+
+        setTimeout(() => {
+            button.innerHTML = originalText;
+            button.style.backgroundColor = '#111';
+            button.disabled = false;
+        }, success ? 1600 : 2400);
+    })();
+}
+
+// Инициализация делегирования (вызывается один раз)
+function initCopyButtons() {
+    if (window._copyDelegateInitialized) return;
+    window._copyDelegateInitialized = true;
+
+    document.addEventListener('click', (e) => {
+        const button = e.target.closest('.copy-btn');
+        if (button) {
+            e.preventDefault();
+            handleCopy(button);
+        }
+    }, { passive: false });
 }
 
 // ====================== ЗАЩИТА ОТ СКРИНШОТОВ ======================
@@ -232,33 +248,28 @@ function initLoadMoreFallback() {
 // ====================== ГЛАВНАЯ ИНИЦИАЛИЗАЦИЯ ======================
 document.addEventListener('DOMContentLoaded', () => {
     initMobileMenu();
-    initCopyButtons();
+    initCopyButtons();           
     initComparisonSliders();
     initUgcSwipers();
     initLoadMoreFallback();
 
-    // Скрываем кнопку, если нет следующей страницы
     const btn = document.getElementById('load-more-btn');
     if (btn && !document.querySelector('.infinite-scroll-trigger')) {
         btn.style.display = 'none';
     }
 
-    console.log('%c[NinjaPrompt] Инициализация завершена', 'color:#22c55e');
+    console.log('%c[NinjaPrompt] Инициализация завершена (с event delegation)', 'color:#22c55e');
 });
 
-// Обработка после HTMX подгрузки (скрытие кнопки + повторная инициализация)
+// Обработка после HTMX 
 document.body.addEventListener('htmx:afterSwap', (event) => {
     if (event.detail.target.id === 'cards-grid') {
-        // Скрываем кнопку, если больше нет страниц
         const btn = document.getElementById('load-more-btn');
         if (btn) {
             const hasTrigger = event.detail.target.querySelector('.infinite-scroll-trigger');
-            if (!hasTrigger) {
-                btn.style.display = 'none';
-            }
+            if (!hasTrigger) btn.style.display = 'none';
         }
 
-        // Повторная инициализация слайдеров и Swiper
         initComparisonSliders(event.detail.target);
         initUgcSwipers(event.detail.target);
     }
