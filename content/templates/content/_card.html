@@ -1,11 +1,39 @@
 {# content/templates/content/_card.html #}
 <div class="card" data-id="{{ item.id }}" data-category="{{ item.effective_category.slug|default:'' }}">
-    <div class="photo-container">
-        {% if item.photos.count > 1 %}
-            {% if item.is_upscale %}
-                {% include "content/upscale_slider.html" with photos=item.photos.all %}
-            {% elif item.is_ugc %}
-                {% include "content/ugc_carousel.html" with photos=item.photos.all %}
+    <div class="photo-container {% if item.display_type == 'video' %}video-container{% endif %}">
+        
+        {% if item.display_type == 'video' and item.video %}
+            {# === ВИДЕО КАРТОЧКА === #}
+            <video 
+                class="main-video"
+                poster="{% if item.video_poster %}{{ item.video_poster.url }}{% endif %}"
+                muted
+                loop
+                playsinline
+                preload="metadata"
+                controls
+            >
+                <source src="{{ item.video.url }}" type="video/mp4">
+                Ваш браузер не поддерживает видео.
+            </video>
+            
+            <div class="category-badge video-badge">
+                {{ item.effective_category.name|default:'Видео' }}
+            </div>
+        {% else %}
+            {# === СУЩЕСТВУЮЩАЯ ЛОГИКА ДЛЯ ФОТО (без изменений) === #}
+            {% if item.photos.count > 1 %}
+                {% if item.is_upscale %}
+                    {% include "content/upscale_slider.html" with photos=item.photos.all %}
+                {% elif item.is_ugc %}
+                    {% include "content/ugc_carousel.html" with photos=item.photos.all %}
+                {% else %}
+                    {% if item.main_photo %}
+                        <img src="{{ item.main_photo.url }}" 
+                             alt="{{ item.effective_category.name|default:'Промпт' }}" 
+                             loading="lazy" class="main-photo">
+                    {% endif %}
+                {% endif %}
             {% else %}
                 {% if item.main_photo %}
                     <img src="{{ item.main_photo.url }}" 
@@ -13,17 +41,11 @@
                          loading="lazy" class="main-photo">
                 {% endif %}
             {% endif %}
-        {% else %}
-            {% if item.main_photo %}
-                <img src="{{ item.main_photo.url }}" 
-                     alt="{{ item.effective_category.name|default:'Промпт' }}" 
-                     loading="lazy" class="main-photo">
-            {% endif %}
+            
+            <div class="category-badge">
+                {{ item.effective_category.name|default:'Промпт' }}
+            </div>
         {% endif %}
-
-        <div class="category-badge">
-            {{ item.effective_category.name|default:'Промпт' }}
-        </div>
     </div>
 
     <div class="card-body">

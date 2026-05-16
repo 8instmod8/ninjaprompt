@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block title %}Видео карточки — NinjaPrompt{% endblock %}
+
+{% block filters %}
+{% endblock %}
+
+{% block content %}
+    <div style="padding: 30px 50px 1px;">
+        <h1>Видео-промпты</h1>
+    </div>
+
+    <div class="grid" id="cards-grid">
+        {% for card in video_cards %}
+            {% include "content/_video_card.html" %}
+        {% endfor %}
+    </div>
+
+    <!-- Hybrid Infinite Scroll -->
+    <div class="infinite-scroll-container">
+
+        {% if page_obj.has_next %}
+            <div class="infinite-scroll-trigger"
+                 hx-get="?page={{ page_obj.next_page_number }}"
+                 hx-trigger="intersect once"
+                 hx-swap="beforeend"
+                 hx-target="#cards-grid"
+                 hx-indicator="#loading-indicator"
+                 aria-hidden="true">
+            </div>
+        {% endif %}
+
+        {% if page_obj.has_next %}
+            <button id="load-more-btn"
+                    class="load-more-btn"
+                    hx-get="?page={{ page_obj.next_page_number }}"
+                    hx-swap="beforeend"
+                    hx-target="#cards-grid"
+                    hx-indicator="#loading-indicator"
+                    onclick="this.style.display='none'">
+                Загрузить ещё
+            </button>
+        {% endif %}
+
+        <div id="loading-indicator" class="htmx-indicator" style="display: none;">
+            <div class="skeleton-grid">
+                {% for i in "1234" %}
+                    <div class="skeleton-card">
+                        <div class="skeleton skeleton-photo"></div>
+                        <div class="skeleton-line short"></div>
+                        <div class="skeleton-line medium"></div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
+    </div>
+
+    {% include "content/_pagination.html" %}
+
+{% endblock %}

@@ -8,7 +8,7 @@ from django.core.cache import cache
 
 from .models import (
     Category, Subcategory, Group, ContentItem, 
-    ContentItemPhoto, DisplayType
+    ContentItemPhoto, DisplayType, VideoCard, VideoCardReference
 )
 from .views import bulk_import_view
 
@@ -187,3 +187,27 @@ class GroupAdmin(admin.ModelAdmin):
     list_display = ('name', 'slug')
     prepopulated_fields = {'slug': ('name',)}
     filter_horizontal = ('subcategories',)
+
+
+class VideoCardReferenceInline(admin.TabularInline):
+    model = VideoCardReference
+    extra = 1
+    fields = ['photo', 'order']
+
+@admin.register(VideoCard)
+class VideoCardAdmin(admin.ModelAdmin):
+    list_display = ['id', 'prompt_description', 'category', 'created_at', 'is_active']
+    list_filter = ['category', 'is_active']
+    search_fields = ['prompt_description', 'copy_text']
+    inlines = [VideoCardReferenceInline]
+    fieldsets = (
+        (None, {
+            'fields': ('category', 'subcategory', 'group', 'video', 'video_poster')
+        }),
+        ('Тексты', {
+            'fields': ('prompt_description', 'copy_text')
+        }),
+        ('Настройки', {
+            'fields': ('is_active',)
+        }),
+    )

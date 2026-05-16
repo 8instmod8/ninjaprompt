@@ -1,0 +1,52 @@
+<div class="card video-card" data-id="{{ card.id }}">
+    <!-- Видео -->
+    <div class="photo-container video-container" style="aspect-ratio: 16 / 9; max-height: 380px; background: #000;">
+        <video 
+            class="main-video"
+            poster="{% if card.video_poster %}{{ card.video_poster.url }}{% endif %}"
+            muted
+            loop
+            playsinline
+            preload="metadata"
+            controls
+            style="width: 100%; height: 100%; object-fit: cover;"
+        >
+            <source src="{{ card.video.url }}" type="video/mp4">
+        </video>
+        
+        <div class="category-badge">
+            {{ card.category.name|default:'Видео' }}
+        </div>
+    </div>
+
+    <div class="card-body">
+        <!-- Инструкция к применению -->
+        <div class="instruction-block">
+            <div class="instruction-header" onclick="this.nextElementSibling.style.display = (this.nextElementSibling.style.display === 'none' || this.nextElementSibling.style.display === '') ? 'block' : 'none'; this.querySelector('.arrow').innerHTML = this.nextElementSibling.style.display === 'none' ? '▼' : '▲';">
+                <span style="font-weight: 600;">Инструкция к генерации</span>
+                <span class="arrow" style="font-size: 13px; color: #666;">▼</span>
+            </div>
+            
+            <div class="prompt-description" style="display: none; margin-top: 12px; padding: 16px; background: #f8f9fa; border-radius: 12px; border: 1px solid #eee; font-size: 14.5px; line-height: 1.55; color: #333;">
+                {{ card.prompt_description|linebreaksbr }}
+            </div>
+        </div>
+
+        <!-- Референсы -->
+         {% if card.references.exists %}
+        <div class="references">
+            <div class="references-title">Референсы:</div>
+            <div class="references-grid">
+                {% for ref in card.references.all %}
+                    <img src="{{ ref.photo.url }}" alt="Референс" loading="lazy">
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Кнопка копирования (в стиле сайта) -->
+        <button class="copy-btn" data-id="{{ card.id }}" data-type="video" style="margin-top: 16px;">
+            Скопировать промпт
+        </button>
+    </div>
+</div>

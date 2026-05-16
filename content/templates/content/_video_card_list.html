@@ -1,0 +1,15 @@
+{% for card in video_cards %}
+    {% include "content/_video_card.html" %}
+{% endfor %}
+
+{% if page_obj.has_next %}
+    <div class="infinite-scroll-fullwidth">
+        <div class="infinite-scroll-trigger"
+             hx-get="?page={{ page_obj.next_page_number }}"
+             hx-trigger="intersect once"
+             hx-swap="beforeend"
+             hx-target="#cards-grid"
+             aria-hidden="true">
+        </div>
+    </div>
+{% endif %}

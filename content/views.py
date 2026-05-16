@@ -10,7 +10,7 @@ from django.core.cache import cache
 from django.views.decorators.cache import cache_page
 from django.views.decorators.vary import vary_on_headers
 
-from .models import ContentItem, ContentItemPhoto, Group, Subcategory, Category
+from .models import ContentItem, ContentItemPhoto, Group, Subcategory, Category, DisplayType, VideoCard
 from django.core.paginator import Paginator
 from .forms import BulkImportForm
 
@@ -164,6 +164,39 @@ def group_detail(request, slug):
         'top_categories': top_categories,
         'is_admin': request.user.is_superuser,
     })
+
+
+# ====================== ВИДЕО ======================
+@cache_page(60 * 5)
+def video_list(request):
+    qs = VideoCard.objects.filter(is_active=True).prefetch_related('references').order_by('-created_at')
+
+    paginator = Paginator(qs, 12)
+    page_obj = paginator.get_page(request.GET.get('page', 1))
+
+    context = {
+        'video_cards': page_obj.object_list,
+        'page_obj': page_obj,
+        'is_last_page': not page_obj.has_next(),
+        'is_video_page': True,
+    }
+
+    if request.htmx:
+        return render(request, 'content/_video_card_list.html', context)
+
+    return render(request, 'content/video_list.html', context)
+
+@require_POST
+def copy_video_card(request, pk):
+    try:
+        card = VideoCard.objects.get(pk=pk, is_active=True)
+
+        return JsonResponse({
+            'success': True,
+            'text': card.copy_text
+        })
+    except VideoCard.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'Not found'}, status=404)  
 
 # ====================== Bulk Import ======================
 @staff_member_required

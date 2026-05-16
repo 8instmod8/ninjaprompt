@@ -2,6 +2,8 @@
 from django.db import models
 from django.db.models.signals import post_delete
 from django.dispatch import receiver
+from django.core.validators import FileExtensionValidator
+from django.core.exceptions import ValidationError
 import os
 
 
@@ -10,7 +12,6 @@ class DisplayType(models.TextChoices):
     SINGLE = 'single', 'Одиночное фото'
     CAROUSEL = 'carousel', 'Карусель'
     SLIDER = 'slider', 'Шторка (До/После)'
-
 
 class Category(models.Model):
     name = models.CharField(max_length=100, verbose_name="Название категории")
@@ -139,8 +140,21 @@ class ContentItem(models.Model):
         help_text="Выбирается индивидуально для каждой карточки (независимо от категории)",
     )
 
+    def clean(self):
+        if self.display_type == DisplayType.VIDEO and not self.video:
+            raise ValidationError("Для типа «Видео» обязательно загрузите видеофайл.")
+        if self.video and self.display_type != DisplayType.VIDEO:
+            # Можно разрешить, но лучше явно указывать тип
+            pass
+
+    @property
+    def is_video(self):
+        return self.display_type == DisplayType.VIDEO and bool(self.video)
+        
     full_text = models.TextField(verbose_name="Текст для копирования")
     created_at = models.DateTimeField(auto_now_add=True)
+    
+    
 
     class Meta:
         verbose_name = "Карточка"
@@ -185,6 +199,71 @@ class ContentItem(models.Model):
         super().delete(*args, **kwargs)
 
 
+# === ВИДЕО-КАРТОЧКИ ===
+
+class VideoCard(models.Model):
+    category = models.ForeignKey(
+        Category, on_delete=models.CASCADE, null=True, blank=True,
+        related_name='video_cards', verbose_name="Категория"
+    )
+    subcategory = models.ForeignKey(
+        Subcategory, on_delete=models.CASCADE, null=True, blank=True,
+        related_name='video_cards', verbose_name="Подкатегория"
+    )
+    group = models.ForeignKey(
+        Group, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='video_cards', verbose_name="Группа"
+    )
+
+    video = models.FileField(
+        upload_to='videos/%Y/%m/%d/',
+        verbose_name="Видео файл"
+    )
+    video_poster = models.ImageField(
+        upload_to='videos/posters/%Y/%m/%d/',
+        blank=True, null=True,
+        verbose_name="Постер (превью)"
+    )
+
+    prompt_description = models.TextField(
+        verbose_name="Описание промпта (для отображения)"
+    )
+    copy_text = models.TextField(
+        verbose_name="Текст для копирования"
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_active = models.BooleanField(default=True, verbose_name="Активна")
+
+    class Meta:
+        verbose_name = "Видео-карточка"
+        verbose_name_plural = "Видео-карточки"
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Видео: {self.prompt_description[:60]}..."
+
+
+class VideoCardReference(models.Model):
+    """Референсные фото к видео-карточке"""
+    video_card = models.ForeignKey(
+        VideoCard, on_delete=models.CASCADE,
+        related_name='references', verbose_name="Видео-карточка"
+    )
+    photo = models.ImageField(
+        upload_to='videos/references/%Y/%m/%d/',
+        verbose_name="Референсное фото"
+    )
+    order = models.PositiveIntegerField(default=0, verbose_name="Порядок")
+
+    class Meta:
+        verbose_name = "Референс видео-карточки"
+        verbose_name_plural = "Референсы видео-карточек"
+        ordering = ['order']
+
+    def __str__(self):
+        return f"Референс #{self.order}"
+        
 # ====================== Signals ======================
 @receiver(post_delete, sender=ContentItem)
 def delete_legacy_photo_on_delete(sender, instance, **kwargs):
