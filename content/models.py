@@ -2,16 +2,16 @@
 from django.db import models
 from django.db.models.signals import post_delete
 from django.dispatch import receiver
-from django.core.validators import FileExtensionValidator
 from django.core.exceptions import ValidationError
 import os
 
 
 class DisplayType(models.TextChoices):
-    """Единый источник правды для типов отображения (2026 best practice)"""
+    """Единый источник правды для типов отображения """
     SINGLE = 'single', 'Одиночное фото'
     CAROUSEL = 'carousel', 'Карусель'
     SLIDER = 'slider', 'Шторка (До/После)'
+
 
 class Category(models.Model):
     name = models.CharField(max_length=100, verbose_name="Название категории")
@@ -101,10 +101,9 @@ class ContentItemPhoto(models.Model):
         return f"Фото #{self.order} для {self.content_item}"
 
     def delete(self, *args, **kwargs):
-        """Удаляем все связанные фото при удалении карточки"""
-        for photo in self.photos.all():
-            photo.delete()
+        """Файл удаляется автоматически через сигнал post_delete"""
         super().delete(*args, **kwargs)
+
 
 class ContentItem(models.Model):
     category = models.ForeignKey(
@@ -140,33 +139,23 @@ class ContentItem(models.Model):
         help_text="Выбирается индивидуально для каждой карточки (независимо от категории)",
     )
 
-    def clean(self):
-        if self.display_type == DisplayType.VIDEO and not self.video:
-            raise ValidationError("Для типа «Видео» обязательно загрузите видеофайл.")
-        if self.video and self.display_type != DisplayType.VIDEO:
-            # Можно разрешить, но лучше явно указывать тип
-            pass
-
-    @property
-    def is_video(self):
-        return self.display_type == DisplayType.VIDEO and bool(self.video)
-        
     full_text = models.TextField(verbose_name="Текст для копирования")
     created_at = models.DateTimeField(auto_now_add=True)
-    
-    
 
     class Meta:
         verbose_name = "Карточка"
         verbose_name_plural = "Карточки"
         ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['-created_at']),
+            models.Index(fields=['category', 'subcategory']),
+        ]
 
     def __str__(self):
         return f"{self.effective_category.name if self.effective_category else 'Без категории'} — {self.full_text[:60]}..."
 
     @property
     def effective_category(self):
-        """Используется в шаблонах и админке"""
         if self.subcategory:
             return self.subcategory.category
         return self.category
@@ -174,16 +163,12 @@ class ContentItem(models.Model):
     @property
     def main_photo(self):
         first = self.photos.first()
-        if first:
-            return first.photo
-        return None
+        return first.photo if first else None
 
     @property
     def has_multiple_photos(self):
-        """Проверка для условного рендеринга"""
         return self.photos.count() > 1
 
-    # === Убрана @property display_type — теперь прямое поле ===
     @property
     def is_ugc(self):
         return self.display_type == DisplayType.CAROUSEL
@@ -263,7 +248,8 @@ class VideoCardReference(models.Model):
 
     def __str__(self):
         return f"Референс #{self.order}"
-        
+
+
 # ====================== Signals ======================
 @receiver(post_delete, sender=ContentItem)
 def delete_legacy_photo_on_delete(sender, instance, **kwargs):
