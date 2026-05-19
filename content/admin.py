@@ -157,13 +157,8 @@ class ContentItemAdmin(admin.ModelAdmin):
             return 0
     photo_count.short_description = 'Кол-во фото'
 
-    def save_model(self, request, obj, form, change):
-        """Сохраняем карточку + сбрасываем кэш"""
-        super().save_model(request, obj, form, change)
-        cache.clear()
-
     def save_related(self, request, form, formsets, change):
-        """Сохраняем inline-фото + валидация + сбрасываем кэш"""
+        """Сохраняем inline-фото + сбрасываем кэш (срабатывает после save_model)"""
         super().save_related(request, form, formsets, change)
         cache.clear()
 

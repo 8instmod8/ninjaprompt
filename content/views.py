@@ -42,6 +42,12 @@ def home(request):
     return render(request, 'content/home.html', {'total_prompts': total_prompts, 'photo_urls': photo_urls})
 
 
+def whoami(request):
+    return JsonResponse({
+        'is_admin': request.user.is_authenticated and request.user.is_superuser,
+    })
+
+
 @require_POST
 @ratelimit(key='user', rate='10/m', block=True)
 def copy_content(request, pk):
@@ -52,8 +58,8 @@ def copy_content(request, pk):
         return JsonResponse({'success': False, 'error': 'Запись не найдена'}, status=404)
 
 
-@vary_on_headers('HX-Request')
 @cache_page(60 * 5)
+@vary_on_headers('HX-Request')
 def content_list(request):
     qs = ContentItem.objects.select_related('category', 'subcategory__category', 'group')\
                             .prefetch_related('photos').order_by('-created_at')
@@ -76,17 +82,16 @@ def content_list(request):
         **context,
         'top_categories': top_categories,
         'categories': categories,
-        'is_admin': request.user.is_superuser,
     })
 
 
-@vary_on_headers('HX-Request')
 @cache_page(60 * 5)
+@vary_on_headers('HX-Request')
 def category_detail(request, slug):
     top_category = get_object_or_404(Category, slug=slug)
     items = ContentItem.objects.filter(
         models.Q(category=top_category) | models.Q(subcategory__category=top_category)
-    ).select_related('category', 'subcategory__category', 'group').prefetch_related('photos').order_by('-created_at')
+    ).select_related('category', 'subcategory__category', 'group').prefetch_related('photos').distinct().order_by('-created_at')
 
     paginator = Paginator(items, 12)
     page_obj = paginator.get_page(request.GET.get('page'))
@@ -110,12 +115,11 @@ def category_detail(request, slug):
         **context,
         'categories': subcategories,
         'top_categories': top_categories,
-        'is_admin': request.user.is_superuser,
     })
 
 
-@vary_on_headers('HX-Request')
 @cache_page(60 * 5)
+@vary_on_headers('HX-Request')
 def subcategory_detail(request, category_slug, subcategory_slug):
     top_category = get_object_or_404(Category, slug=category_slug)
     subcategory = get_object_or_404(Subcategory, slug=subcategory_slug, category=top_category)
@@ -144,7 +148,6 @@ def subcategory_detail(request, category_slug, subcategory_slug):
         **context,
         'categories': subcategories,
         'top_categories': top_categories,
-        'is_admin': request.user.is_superuser,
     })
 
 
@@ -162,7 +165,6 @@ def group_detail(request, slug):
         'items': items,
         'categories': categories,
         'top_categories': top_categories,
-        'is_admin': request.user.is_superuser,
     })
 
 
@@ -187,6 +189,7 @@ def video_list(request):
     return render(request, 'content/video_list.html', context)
 
 @require_POST
+@ratelimit(key='user_or_ip', rate='10/m', block=True)
 def copy_video_card(request, pk):
     try:
         card = VideoCard.objects.get(pk=pk, is_active=True)
@@ -211,9 +214,28 @@ def bulk_import_view(request):
             if photos_zip:
                 extract_path = os.path.join(settings.MEDIA_ROOT, 'photos')
                 os.makedirs(extract_path, exist_ok=True)
-                with zipfile.ZipFile(photos_zip, 'r') as zip_ref:
-                    zip_ref.extractall(extract_path)
-                messages.info(request, "✅ Фотографии распакованы")
+                safe_root = os.path.realpath(extract_path)
+                MAX_TOTAL_BYTES = 2 * 1024 * 1024 * 1024  # 2 GB защита от zip bomb
+                MAX_FILES = 5000
+
+                try:
+                    with zipfile.ZipFile(photos_zip, 'r') as zip_ref:
+                        members = zip_ref.infolist()
+                        if len(members) > MAX_FILES:
+                            raise ValueError(f"Слишком много файлов в архиве: {len(members)}")
+                        total = 0
+                        for m in members:
+                            total += m.file_size
+                            if total > MAX_TOTAL_BYTES:
+                                raise ValueError("Распакованный размер архива превышает лимит")
+                            dest = os.path.realpath(os.path.join(safe_root, m.filename))
+                            if not dest.startswith(safe_root + os.sep) and dest != safe_root:
+                                raise ValueError(f"Подозрительный путь в архиве: {m.filename}")
+                        zip_ref.extractall(extract_path)
+                    messages.info(request, "✅ Фотографии распакованы")
+                except (zipfile.BadZipFile, ValueError) as e:
+                    messages.error(request, f"❌ Ошибка распаковки ZIP: {e}")
+                    return redirect('admin:bulk_import')
 
             wb = load_workbook(excel_file, data_only=True)
             sheet = wb.active
@@ -283,20 +305,3 @@ def bulk_import_view(request):
 
     return render(request, 'content/bulk_import.html', {'form': form})
 
-# === Глобальная защита от падений (production best practice) ===
-import logging
-logger = logging.getLogger(__name__)
-
-def safe_render(request, template_name, context=None):
-    if context is None:
-        context = {}
-    try:
-        return render(request, template_name, context)
-    except Exception as e:
-        import logging
-        logger = logging.getLogger(__name__)
-        logger.exception(f"Render error: {e}")
-        return render(request, 'content/error.html', {
-            'error': str(e),
-            'debug': settings.DEBUG
-        })

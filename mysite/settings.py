@@ -82,7 +82,9 @@ DATABASES = {
         'CONN_MAX_AGE': 600,
         'OPTIONS': {
             'connect_timeout': 10,
-            'sslmode': 'prefer',
+            # БД на том же сервере (localhost / unix socket) — трафик не покидает машину.
+            # При переезде на managed Postgres / отдельный хост заменить на 'require'.
+            'sslmode': env('DB_SSLMODE', default='prefer'),
         },
     }
 }
@@ -146,18 +148,21 @@ SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_BROWSER_XSS_FILTER = True
 X_FRAME_OPTIONS = 'DENY'
 
-# === CACHES (новое — критично для производительности) ===
+# === CACHES (Redis — shared между воркерами Gunicorn) ===
 CACHES = {
     'default': {
-        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
-        'LOCATION': 'ninjaprompt-cache-v1',
+        'BACKEND': 'django_redis.cache.RedisCache',
+        'LOCATION': env('REDIS_URL', default='redis://127.0.0.1:6379/1'),
         'TIMEOUT': 300,
         'OPTIONS': {
-            'MAX_ENTRIES': 10000,
-            'CULL_FREQUENCY': 3,
+            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+            'IGNORE_EXCEPTIONS': True,
         },
+        'KEY_PREFIX': 'ninjaprompt',
     }
 }
+
+DJANGO_REDIS_IGNORE_EXCEPTIONS = True
 
 # === LOGGING (production-ready) ===
 LOGGING = {
@@ -200,4 +205,3 @@ LOGGING = {
 # === DEFAULTS ===
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-SILENCED_SYSTEM_CHECKS = ['django_ratelimit.E003', 'django_ratelimit.W001']

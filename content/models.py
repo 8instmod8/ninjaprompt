@@ -3,6 +3,7 @@ from django.db import models
 from django.db.models.signals import post_delete
 from django.dispatch import receiver
 from django.core.exceptions import ValidationError
+from django.core.validators import FileExtensionValidator
 import os
 
 
@@ -87,7 +88,8 @@ class ContentItemPhoto(models.Model):
     )
     photo = models.ImageField(
         upload_to='photos/multiple/%Y/%m/%d/',
-        verbose_name="Фото"
+        verbose_name="Фото",
+        validators=[FileExtensionValidator(['jpg', 'jpeg', 'png', 'webp', 'gif'])],
     )
     order = models.PositiveIntegerField(default=0, verbose_name="Порядок отображения")
     created_at = models.DateTimeField(auto_now_add=True)
@@ -202,12 +204,14 @@ class VideoCard(models.Model):
 
     video = models.FileField(
         upload_to='videos/%Y/%m/%d/',
-        verbose_name="Видео файл"
+        verbose_name="Видео файл",
+        validators=[FileExtensionValidator(['mp4', 'webm', 'mov'])],
     )
     video_poster = models.ImageField(
         upload_to='videos/posters/%Y/%m/%d/',
         blank=True, null=True,
-        verbose_name="Постер (превью)"
+        verbose_name="Постер (превью)",
+        validators=[FileExtensionValidator(['jpg', 'jpeg', 'png', 'webp'])],
     )
 
     prompt_description = models.TextField(
@@ -237,7 +241,8 @@ class VideoCardReference(models.Model):
     )
     photo = models.ImageField(
         upload_to='videos/references/%Y/%m/%d/',
-        verbose_name="Референсное фото"
+        verbose_name="Референсное фото",
+        validators=[FileExtensionValidator(['jpg', 'jpeg', 'png', 'webp'])],
     )
     order = models.PositiveIntegerField(default=0, verbose_name="Порядок")
 
@@ -251,12 +256,6 @@ class VideoCardReference(models.Model):
 
 
 # ====================== Signals ======================
-@receiver(post_delete, sender=ContentItem)
-def delete_legacy_photo_on_delete(sender, instance, **kwargs):
-    """Legacy-сигнал больше не нужен"""
-    pass
-
-
 @receiver(post_delete, sender=ContentItemPhoto)
 def delete_photo_file(sender, instance, **kwargs):
     """Удаление файла при удалении ContentItemPhoto"""

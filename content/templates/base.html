@@ -44,9 +44,7 @@
                 </div>
 
                 <div class="user-panel">
-                    {% if is_admin %}
-                        <button class="add-btn" onclick="location.href='/admin/content/contentitem/add/'">+</button>
-                    {% endif %}
+                    <button class="add-btn" id="admin-add-btn" hidden onclick="location.href='/admin/content/contentitem/add/'">+</button>
 
                     <div class="mobile-header-actions">
                         <a href="https://t.me/ninjaprompt" target="_blank">
