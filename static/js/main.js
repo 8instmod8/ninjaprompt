@@ -17,18 +17,6 @@ function getCookie(name) {
     return value;
 }
 
-// ====================== ADMIN UI ======================
-async function initAdminUI() {
-    const btn = document.getElementById('admin-add-btn');
-    if (!btn) return;
-    try {
-        const res = await fetch('/api/me/', { credentials: 'same-origin' });
-        if (!res.ok) return;
-        const data = await res.json();
-        if (data.is_admin) btn.hidden = false;
-    } catch (e) { /* anonymous user — ignore */ }
-}
-
 // ====================== БУРГЕР МЕНЮ ======================
 function initMobileMenu() {
     const btn = document.getElementById('mobile-menu-btn');
@@ -244,7 +232,6 @@ function initLoadMoreFallback() {
 document.addEventListener('DOMContentLoaded', () => {
     initMobileMenu();
     initCopyButtons();
-    initAdminUI();
     initComparisonSliders();
     initUgcSwipers();
     initLoadMoreFallback();

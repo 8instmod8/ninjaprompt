@@ -42,12 +42,6 @@ def home(request):
     return render(request, 'content/home.html', {'total_prompts': total_prompts, 'photo_urls': photo_urls})
 
 
-def whoami(request):
-    return JsonResponse({
-        'is_admin': request.user.is_authenticated and request.user.is_superuser,
-    })
-
-
 @require_POST
 @ratelimit(key='user', rate='10/m', block=True)
 def copy_content(request, pk):

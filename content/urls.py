@@ -19,5 +19,4 @@ urlpatterns = [
          views.subcategory_detail, name='subcategory_detail'),
     
     path('api/copy/<int:pk>/', views.copy_content, name='copy_content'),
-    path('api/me/', views.whoami, name='whoami'),
 ]
