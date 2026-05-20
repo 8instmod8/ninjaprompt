@@ -43,7 +43,7 @@ def home(request):
 
 
 @require_POST
-@ratelimit(key='user', rate='10/m', block=True)
+@ratelimit(key='ip', rate='10/m', block=True)
 def copy_content(request, pk):
     try:
         item = ContentItem.objects.get(pk=pk)
@@ -183,7 +183,7 @@ def video_list(request):
     return render(request, 'content/video_list.html', context)
 
 @require_POST
-@ratelimit(key='user_or_ip', rate='10/m', block=True)
+@ratelimit(key='ip', rate='10/m', block=True)
 def copy_video_card(request, pk):
     try:
         card = VideoCard.objects.get(pk=pk, is_active=True)
