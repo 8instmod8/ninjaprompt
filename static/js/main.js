@@ -71,13 +71,14 @@ function handleCopy(button) {
 
     const showError = (e) => {
         console.error('[NinjaPrompt] Copy error:', e);
-        button.innerHTML = 'Ошибка';
-        button.style.backgroundColor = '#ef4444';
+        const tooFast = e && e.code === 429;
+        button.innerHTML = tooFast ? 'Подождите минутку' : 'Ошибка';
+        button.style.backgroundColor = tooFast ? '#f59e0b' : '#ef4444';
         setTimeout(() => {
             button.innerHTML = originalText;
             button.style.backgroundColor = '#111';
             button.disabled = false;
-        }, 2400);
+        }, tooFast ? 3000 : 2400);
     };
 
     const textPromise = fetch(url, {
@@ -85,7 +86,14 @@ function handleCopy(button) {
         headers: { 'X-CSRFToken': csrfToken },
         credentials: 'same-origin',
     })
-        .then(r => r.json())
+        .then(async r => {
+            if (r.status === 429) {
+                const err = new Error('rate-limited');
+                err.code = 429;
+                throw err;
+            }
+            return r.json();
+        })
         .then(d => {
             if (!d.success || !d.text) throw new Error('No text');
             return d.text;

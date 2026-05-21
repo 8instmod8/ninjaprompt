@@ -50,13 +50,30 @@ def _client_ip(group, request):
 
 
 @require_POST
-@ratelimit(key=_client_ip, rate='10/m', block=True)
+@ratelimit(key=_client_ip, rate='10/m', block=False)
 def copy_content(request, pk):
+    if getattr(request, 'limited', False):
+        return JsonResponse(
+            {'success': False, 'error': 'Слишком часто. Подождите минутку.'},
+            status=429,
+        )
     try:
         item = ContentItem.objects.get(pk=pk)
         return JsonResponse({'success': True, 'text': item.full_text})
     except ContentItem.DoesNotExist:
         return JsonResponse({'success': False, 'error': 'Запись не найдена'}, status=404)
+
+
+@staff_member_required
+def debug_ip(request):
+    """Показывает что Django видит в request.META для диагностики ratelimit."""
+    return JsonResponse({
+        'computed_ip': _client_ip(None, request),
+        'REMOTE_ADDR': request.META.get('REMOTE_ADDR'),
+        'HTTP_X_FORWARDED_FOR': request.META.get('HTTP_X_FORWARDED_FOR'),
+        'HTTP_X_REAL_IP': request.META.get('HTTP_X_REAL_IP'),
+        'HTTP_HOST': request.META.get('HTTP_HOST'),
+    })
 
 
 @cache_page(60 * 5)
@@ -190,17 +207,18 @@ def video_list(request):
     return render(request, 'content/video_list.html', context)
 
 @require_POST
-@ratelimit(key=_client_ip, rate='10/m', block=True)
+@ratelimit(key=_client_ip, rate='10/m', block=False)
 def copy_video_card(request, pk):
+    if getattr(request, 'limited', False):
+        return JsonResponse(
+            {'success': False, 'error': 'Слишком часто. Подождите минутку.'},
+            status=429,
+        )
     try:
         card = VideoCard.objects.get(pk=pk, is_active=True)
-
-        return JsonResponse({
-            'success': True,
-            'text': card.copy_text
-        })
+        return JsonResponse({'success': True, 'text': card.copy_text})
     except VideoCard.DoesNotExist:
-        return JsonResponse({'success': False, 'error': 'Not found'}, status=404)  
+        return JsonResponse({'success': False, 'error': 'Not found'}, status=404)
 
 # ====================== Bulk Import ======================
 @staff_member_required
