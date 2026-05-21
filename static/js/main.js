@@ -44,7 +44,7 @@ function initMobileMenu() {
 // ====================== КОПИРОВАНИЕ ПРОМПТОВ (EVENT DELEGATION) ======================
 function handleCopy(button) {
     const itemId = button.dataset.id;
-    const type = button.dataset.type || 'content'; // content или video
+    const type = button.dataset.type || 'content';
     const originalText = button.innerHTML;
 
     if (button.disabled) return;
@@ -52,48 +52,59 @@ function handleCopy(button) {
     button.disabled = true;
     button.innerHTML = 'Копируем...';
 
-    const url = type === 'video' 
-        ? `/api/copy-video/${itemId}/` 
+    const url = type === 'video'
+        ? `/api/copy-video/${itemId}/`
         : `/api/copy/${itemId}/`;
 
-    (async () => {
-        try {
-            const csrfToken = getCookie('csrftoken') ||
-                document.querySelector('[name=csrfmiddlewaretoken]')?.value || '';
+    const csrfToken = getCookie('csrftoken') ||
+        document.querySelector('[name=csrfmiddlewaretoken]')?.value || '';
 
-            const res = await fetch(url, {
-                method: 'POST',
-                headers: { 'X-CSRFToken': csrfToken },
-                credentials: 'same-origin'
-            });
+    const showSuccess = () => {
+        button.innerHTML = 'Скопировано!';
+        button.style.backgroundColor = '#22c55e';
+        setTimeout(() => {
+            button.innerHTML = originalText;
+            button.style.backgroundColor = '#111';
+            button.disabled = false;
+        }, 1600);
+    };
 
-            const data = await res.json();
+    const showError = (e) => {
+        console.error('[NinjaPrompt] Copy error:', e);
+        button.innerHTML = 'Ошибка';
+        button.style.backgroundColor = '#ef4444';
+        setTimeout(() => {
+            button.innerHTML = originalText;
+            button.style.backgroundColor = '#111';
+            button.disabled = false;
+        }, 2400);
+    };
 
-            if (!data.success || !data.text) throw new Error('No text');
+    const textPromise = fetch(url, {
+        method: 'POST',
+        headers: { 'X-CSRFToken': csrfToken },
+        credentials: 'same-origin',
+    })
+        .then(r => r.json())
+        .then(d => {
+            if (!d.success || !d.text) throw new Error('No text');
+            return d.text;
+        });
 
-            await navigator.clipboard.writeText(data.text);
-
-            button.innerHTML = 'Скопировано!';
-            button.style.backgroundColor = '#22c55e';
-
-            setTimeout(() => {
-                button.innerHTML = originalText;
-                button.style.backgroundColor = '#111';
-                button.disabled = false;
-            }, 1600);
-
-        } catch (e) {
-            console.error('[NinjaPrompt] Copy error:', e);
-            button.innerHTML = 'Ошибка';
-            button.style.backgroundColor = '#ef4444';
-
-            setTimeout(() => {
-                button.innerHTML = originalText;
-                button.style.backgroundColor = '#111';
-                button.disabled = false;
-            }, 2400);
-        }
-    })();
+    // Safari iOS теряет user-gesture после await,
+    // поэтому clipboard.write вызываем СИНХРОННО с promise-блоба внутри ClipboardItem.
+    if (window.ClipboardItem && navigator.clipboard && navigator.clipboard.write) {
+        const item = new ClipboardItem({
+            'text/plain': textPromise.then(t => new Blob([t], { type: 'text/plain' })),
+        });
+        navigator.clipboard.write([item]).then(showSuccess).catch(showError);
+    } else {
+        // Fallback для старых браузеров без ClipboardItem
+        textPromise
+            .then(t => navigator.clipboard.writeText(t))
+            .then(showSuccess)
+            .catch(showError);
+    }
 }
 
 
